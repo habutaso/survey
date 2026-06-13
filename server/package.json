@@ -1,0 +1,66 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "scripts": {
+    "predev": "run-s generate migrate:deploy",
+    "dev": "run-p dev:*",
+    "dev:build": "node -r esbuild-register ./scripts/build.dev.ts",
+    "dev:server": "touch index.js && node-dev --enable-source-maps --respawn index.js",
+    "dev:frourio": "frourio --watch",
+    "dev:prisma": "prisma generate --watch",
+    "prebuild": "run-s generate migrate:deploy",
+    "build": "node -r esbuild-register ./scripts/build.prod.ts",
+    "lint": "prisma format",
+    "generate": "run-s generate:prisma generate:frourio",
+    "generate:frourio": "frourio",
+    "generate:prisma": "prisma generate",
+    "migrate:dev": "prisma migrate dev && prisma db seed",
+    "migrate:dev:createonly": "prisma migrate dev --create-only",
+    "migrate:deploy": "prisma migrate deploy && prisma db seed",
+    "migrate:reset": "prisma migrate reset",
+    "start": "node --enable-source-maps index.js",
+    "test": "vitest run --coverage",
+    "typecheck": "tsc --pretty --noEmit"
+  },
+  "prisma": {
+    "seed": "node -r esbuild-register --enable-source-maps prisma/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.696.0",
+    "@aws-sdk/client-s3": "^3.697.0",
+    "@aws-sdk/s3-request-presigner": "^3.697.0",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/etag": "^6.0.3",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/http-proxy": "^11.0.1",
+    "@fastify/jwt": "^9.0.3",
+    "@fastify/multipart": "^9.0.3",
+    "@prisma/client": "^5.22.0",
+    "aspida": "^1.14.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.2.1",
+    "get-jwks": "^9.0.2",
+    "ulid": "^2.3.0",
+    "velona": "^0.8.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@aspida/axios": "^1.14.0",
+    "@types/busboy": "^1.5.4",
+    "@types/node": "^22.9.1",
+    "axios": "^1.7.7",
+    "esbuild": "^0.24.0",
+    "esbuild-node-externals": "^1.15.0",
+    "esbuild-register": "^3.6.0",
+    "fast-check": "3.23.2",
+    "frourio": "^1.3.1",
+    "inbucket-js-client": "^2.0.0",
+    "node-dev": "^8.0.0",
+    "notios": "^0.5.3",
+    "prisma": "^5.22.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

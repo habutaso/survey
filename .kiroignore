@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+
+# Framework caches
+.next/
+.nuxt/
+.svelte-kit/
+.storybook-out/
+.parcel-cache/
+.turbo/
+.cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Runtime files
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local temp
+tmp/
+temp/
+*.local
+
+# Logs
+logs/
+*.log

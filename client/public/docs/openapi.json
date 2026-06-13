@@ -1,0 +1,608 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "catapult api",
+    "version": "v0.0"
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "const": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private": {
+      "get": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/me/email": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/me": {
+      "get": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/tasks/{taskId}": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "done": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "done"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/tasks/di": {
+      "get": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/tasks": {
+      "get": {
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "limit": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/{label:string;}"
+                  },
+                  {
+                    "$ref": "#/components/schemas/{image?:File|undefined;}"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/{done:boolean;taskId:Branded<\"maybe\">|Dto<\"task\">;}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/{taskId:Branded<\"maybe\">|Dto<\"task\">;}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": {
+                    "type": "string"
+                  },
+                  "accessToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accessToken",
+                  "idToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "success"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "success"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserDto": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "signInName": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "createdTime": {
+                "type": "number"
+              },
+              "photoUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "createdTime",
+              "displayName",
+              "email",
+              "photoUrl",
+              "signInName"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        ]
+      },
+      "Dto<\"user\">": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "TaskDto": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "done": {
+                "type": "boolean"
+              },
+              "createdTime": {
+                "type": "number"
+              },
+              "author": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  "signInName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "signInName"
+                ]
+              }
+            },
+            "required": [
+              "author",
+              "createdTime",
+              "done",
+              "label"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Dto<\"task\">"
+              },
+              "image": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "s3Key": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "s3Key",
+                  "url"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "image"
+            ]
+          }
+        ]
+      },
+      "Dto<\"task\">": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "{limit?:number|undefined;}": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number"
+          }
+        }
+      },
+      "FormData": {
+        "type": "object"
+      },
+      "{label:string;}": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "{image?:File|undefined;}": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "$ref": "#/components/schemas/File"
+          }
+        }
+      },
+      "File": {
+        "type": "object",
+        "properties": {
+          "lastModified": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "webkitRelativePath": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lastModified",
+          "name",
+          "size",
+          "type",
+          "webkitRelativePath"
+        ]
+      },
+      "{done:boolean;taskId:Branded<\"maybe\">|Dto<\"task\">;}": {
+        "type": "object",
+        "properties": {
+          "done": {
+            "type": "boolean"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Branded<\"maybe\">"
+              },
+              {
+                "$ref": "#/components/schemas/Dto<\"task\">"
+              }
+            ]
+          }
+        },
+        "required": [
+          "done",
+          "taskId"
+        ]
+      },
+      "Branded<\"maybe\">": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "{taskId:Branded<\"maybe\">|Dto<\"task\">;}": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Branded<\"maybe\">"
+              },
+              {
+                "$ref": "#/components/schemas/Dto<\"task\">"
+              }
+            ]
+          }
+        },
+        "required": [
+          "taskId"
+        ]
+      }
+    }
+  }
+}
