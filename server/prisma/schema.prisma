@@ -22,3 +22,67 @@ model User {
   createdAt   DateTime
   roles       Role[]   @default([])
 }
+
+model AuditLog {
+  id          String   @id
+  occurredAt  DateTime
+  actorUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  outcome     String
+  summary     String
+  changes     Json?
+}
+
+// 調査集約ルート（U2）。1家屋=1調査区分。enum は String カラム＋アプリ層 zod 検証（enum churn 回避）。
+// PII（victim*）は at-rest 暗号化（インフラ層）に委譲し平文カラムで保持（Q8=A / SECURITY-01）。
+model Survey {
+  id               String        @id
+  surveyType       String
+  parentSurveyId   String?
+  status           String
+  address          String
+  houseNumber      String
+  structureType    String
+  buildingName     String?
+  floors           Int?
+  victimName       String?
+  victimContact    String?
+  victimAddress    String?
+  latitude         Float?
+  longitude        Float?
+  damageRatio      Float?
+  damageLevel      String?
+  assessmentBasis  Json?
+  officialSurveyId String?
+  officialChosenBy String?
+  officialChosenAt DateTime?
+  createdBy        String
+  createdAt        DateTime
+  submittedAt      DateTime?
+  approvedBy       String?
+  approvedAt       DateTime?
+  confirmedBy      String?
+  confirmedAt      DateTime?
+  first            FirstSurvey?
+  second           SecondSurvey?
+}
+
+// 第1次入力データ実体（surveyType=first）。計算規則は U3a。部位/階按分は当面 Json（正準化は U3c）。
+model FirstSurvey {
+  surveyId           String  @id
+  survey             Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  externalForceFlags Json
+  tiltRatio          Float?
+  inundationDepthCm  Float?
+  floorApportionment Json?
+}
+
+// 第2次入力データ実体（surveyType=second）。計算規則は U3b。
+model SecondSurvey {
+  surveyId           String  @id
+  survey             Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  partDamages        Json
+  floorApportionment Json?
+}

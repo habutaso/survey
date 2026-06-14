@@ -329,3 +329,191 @@
 **Context**: CONSTRUCTION - U1 COMPLETE. Awaiting user approval of U1 implementation to proceed to U-Cross (error→HTTP 401/403/404 refinement + audit record wiring). Handoffs: NotFound currently 403 on PATCH (U-Cross→404); user list/search API → U6u; object-auth state-based allowed → U2.
 
 ---
+
+## U1 Approval & U-Cross Functional Design Start
+**Timestamp**: 2026-06-13T22:48:57+09:00
+**User Input**: "承認" (approve U1 implementation)
+**AI Response**: Recorded U1 (auth/user/role foundation) as COMPLETE & APPROVED. Advanced to U-Cross per build order (U0→U1→U-Cross→...). Loaded unit definition (unit-of-work.md U-Cross: audit log / input validation / encryption / secure defaults), dependency matrix (U-Cross→U1, U-Cross→PostgreSQL audit), story map (US-801 validation, US-803 audit, US-804 encryption, US-806 secure defaults), and requirements (NFR-08, NFR-05, SECURITY-01/03-14/04/05/08/09/13/15). Started Functional Design stage: created aidlc-docs/construction/plans/U-Cross-functional-design-plan.md with design plan (checkboxes) + 15 embedded clarification questions across audit storage/tamper-resistance/schema/PII-in-before-after, error-handler HTTP mapping (401/403/404/400/500 refinement), security headers/CSP role split, shared validators scope, server vs client encryption split + local key lifecycle, and stage sequencing (NFR skip + light Infra). Awaiting [回答] in the plan file.
+**Context**: CONSTRUCTION - U-Cross Functional Design Part 1 (plan + questions). Awaiting answers before generating functional design artifacts.
+
+---
+
+## U-Cross Functional Design Artifacts Generated
+**Timestamp**: 2026-06-13T22:58:17+09:00
+**User Input**: "完了" (answers in U-Cross-functional-design-plan.md: Q1–Q15 all = A)
+**AI Response**: No ambiguities. Generated functional design artifacts under aidlc-docs/construction/U-Cross/functional-design/: domain-entities.md (AuditLog entity + AuditAction enum + AuditOutcome + FieldChange masked before/after + add 'auditLog' to ID_NAME_LIST; error taxonomy ValidationError/UnauthorizedError + existing Forbidden/NotFound → 401/403/404/400/500; validation primitives percentage/boundedString/numberInRange; LocalCryptoStandard AES-GCM 256 client spec + key lifecycle), business-logic-model.md (auditUseCase.record(tx,event) same-tx atomicity, U-Cross records auth/authz failures, units call for transitions/PII/roles; toFieldChanges masking; global error handler type-based resolveHttpStatus/resolveBody fail-closed; helmet + CSP-on-Next split; common validators; client crypto std; INV-A..D PBT candidates), business-rules.md (BR-1..13). Decisions: audit=PostgreSQL append-only INSERT-only, no hash chain, PII masked in changes, permanent retention, failures recorded only (alerting→OPS); error type→HTTP refinement (NotFound now 404, fail closed, 500 hides internals + audit); helmet enhanced + HTML CSP at Next.js (U6u), prod http-proxy strips CSP noted; common reusable validators (domain-specific in U2/U3); injection prevention = Prisma-only doc; server at-rest/TLS = infra (Infra Design light), no server field encryption; client IndexedDB AES-GCM 256 standard (impl U6f) with session-ephemeral key wiped on logout + wipe local PII/images after sync success; stage: NFR Req/Design SKIP + Infra light then Code Generation.
+**Context**: CONSTRUCTION - U-Cross Functional Design COMPLETE, awaiting approval. Next: NFR Req/Design SKIP, Infrastructure Design (light) then Code Generation.
+
+---
+
+## U-Cross FD Approval + Infra (light) + Code Generation Plan (Part 1)
+**Timestamp**: 2026-06-13T23:04:14+09:00
+**User Input**: "承認" (approve U-Cross functional design)
+**AI Response**: Recorded U-Cross Functional Design APPROVED. Per Q15=A: NFR Requirements/Design SKIP. Created Infrastructure Design (light) at aidlc-docs/construction/U-Cross/infrastructure-design/infrastructure-design.md (deploy form, PG/S3 at-rest + TLS = infra layer, helmet/CSP split, audit append-only protection, structured-log no-PII, supply chain; code-impact summary). Created Code Generation Plan (Part 1) aidlc-docs/construction/plans/U-Cross-code-generation-plan.md (Steps 1-13: constants/types incl ID_NAME_LIST+='auditLog' & AUDIT_ACTION_LIST/AUDIT_OUTCOME_LIST/DEFAULT_STRING_MAX; common validators percentage/boundedString/numberInRange/epochMs + audit validators; ValidationError/UnauthorizedError; audit model maskValue/toFieldChanges/create; audit store toAuditLogDto + command save INSERT-only; auditUseCase.record(client,event); errorHandler.ts pure resolveHttpStatus/resolveBody + app.ts type-based handler + helmet + authz/500 audit; hooks auth.failure record; U1 assignRoles wiring user.roles.change; Prisma AuditLog model [action/outcome as String to avoid enum churn] + migrate dev add_audit_log [additive]; unit+PBT tests INV-A..D + API audit.test.ts incl NotFound→404 refinement; summary; generate+tsc+test). Decision: action/outcome stored as String columns (TS union + zod validated). Awaiting plan approval (GATE) before Part 2.
+**Context**: CONSTRUCTION - U-Cross Code Generation Part 1 (Planning) COMPLETE. prisma migrate (additive AuditLog) gated with plan approval. Awaiting approval to execute Part 2.
+
+---
+
+## U-Cross Code Generation Part 2 — EXECUTED & COMPLETE
+**Timestamp**: 2026-06-13T23:30:00+09:00
+**User Input**: "承認" (approve U-Cross code generation plan)
+**AI Response**: Executed U-Cross-code-generation-plan.md Steps 1-13. constants: ID_NAME_LIST+='auditLog', AUDIT_ACTION_LIST(10)/AUDIT_OUTCOME_LIST/DEFAULT_STRING_MAX. common/types/audit.ts; common/validators/common.ts (percentage/boundedString/numberInRange/epochMs) + audit.ts. customAssert += ValidationError/UnauthorizedError. domain/audit: auditType, auditMethod (maskValue/toFieldChanges[entries-based due to noUncheckedIndexedAccess]/create), toAuditLogDto, auditCommand(save INSERT-only + Prisma.JsonNull), auditUseCase.record(client,event). service/errorHandler.ts (resolveHttpStatus type-based incl ZodError→400; resolveBody fail-closed). app.ts: helmet enhanced (CSP false [Next handles HTML CSP], HSTS/noSniff/frameguard) + async setErrorHandler type-based (403→authz.failure audit, 500 hides details). hooks.ts: auth.failure recorded before 401. userUseCase.assignRoles: user.roles.change recorded same-tx. Prisma AuditLog model + migration 20260613142321_add_audit_log (additive). Tests: unit auditMethod (PBT INV-A), validators, errorHandler (INV-B/C) + api/private/audit.test.ts (success/authz.failure/auth.failure) + updated U1 users.test.ts (invalid-role 403→400, not-found 403→404). VERIFICATION: tsc PASS 0 errors; npm test 53 passed/9 files; coverage 100% on api/**/{controller,hooks,validators}, common/**, domain/**. Summary: construction/U-Cross/code/u-cross-summary.md. Key fix: custom validatorCompiler throws ZodError (not fastify .validation) → added ZodError check for 400.
+**Context**: CONSTRUCTION - U-Cross COMPLETE, awaiting approval to proceed to U2 (Survey aggregate + submission sync API). Handoffs: state-transition/PII/officialJudgment audit calls wired in U2; auth.login(success) deferred; client crypto impl in U6f; at-rest/TLS/audit-DB-perms/alerting in OPERATIONS.
+
+---
+
+## Session Resume — U-Cross Approval Gate
+**Timestamp**: 2026-06-14T01:31:07+09:00
+**User Input**: "using ai-dlc 続き"
+**AI Response**: Resumed AI-DLC workflow from aidlc-state.md. Current position: CONSTRUCTION → U-Cross Code Generation COMPLETE, awaiting explicit approval. Re-presented standardized 2-option completion message for U-Cross (Request Changes / Continue to U2). No code changes made; waiting for user decision before proceeding to U2 (Survey aggregate + submission bulk-sync API).
+**Context**: CONSTRUCTION - U-Cross approval gate. Next on approval: U2 Functional Design.
+
+---
+
+## U-Cross Code Generation — APPROVED
+**Timestamp**: 2026-06-14T01:32:28+09:00
+**User Input**: "承認"
+**AI Response**: Recorded U-Cross Code Generation APPROVED & COMPLETE. Marked U-Cross complete in aidlc-state.md. Proceeding to U2 (Survey aggregate + submission bulk-sync API) per-unit loop, starting with Functional Design stage.
+**Context**: CONSTRUCTION - U-Cross COMPLETE & APPROVED. Next: U2 Functional Design.
+
+---
+
+## U2 Functional Design — Part 1 (Plan + Questions)
+**Timestamp**: 2026-06-14T01:33:30+09:00
+**User Input**: (continuation of "承認" — proceeding to U2)
+**AI Response**: Entered U2 (調査管理 Survey 集約＋提出時一括同期 API) per-unit loop → Functional Design. Created plan aidlc-docs/construction/plans/U2-functional-design-plan.md (Steps A–L + 27 questions Q1–Q27 with [Answer]: tags). Stage assessment: Functional Design EXECUTE; NFR Req/Design + Infra SKIP (tentative, may flip on Q8=B); Code Generation EXECUTE. Key design themes surfaced for clarification: server persistence starts at submission (local-first), client-generated ULID + idempotent ingestSubmission, calc/photo as DI ports (U3/U4 built later), server-side recompute on submit, PII storage/encryption model (U-Cross at-rest vs field encryption), house identification fields, first→second multiplicity, official determination placement, state machine + reject scope, object/function authz + read scope, validation ranges, API endpoint set, PBT focus (state machine/payload round-trip/idempotency), audit events. Awaiting user answers before generating artifacts.
+**Context**: CONSTRUCTION - U2 Functional Design Part 1 COMPLETE. Awaiting answers to Q1–Q27.
+
+---
+
+## U2 Functional Design — Answers + Artifacts Generated
+**Timestamp**: 2026-06-14T01:55:25+09:00
+**User Input**: "完了"
+**AI Response**: Interpreted "完了" as the offered bulk-approve ("すべて推奨でよい"). Confirmed all answers Q1–Q26 = recommended (A), Q27 = なし; recorded in U2-functional-design-plan.md (Confirmed Answers table) and marked Steps A–L complete. Stage assessment finalized: NFR Req/Design + Infra SKIP (Q8=A, no key-mgmt NFR); Code Generation EXECUTE. Generated functional design artifacts under aidlc-docs/construction/U2/functional-design/: domain-entities.md (Survey aggregate root [client-ULID id, surveyType, parentSurveyId 1:N, status, house info, embedded PII, GPS, AssessmentResult, official* on first, actors/timestamps]; FirstSurvey [externalForceFlags/tiltRatio/inundationDepthCm/floorApportionment]; SecondSurvey [partDamages/floorApportionment]; FloorRatio/PartDamage/AssessmentResult value objects; PII protection via at-rest infra + authz + masked audit + client crypto; assessmentPort/photoPort DI boundaries for U3a/U3b/U4; ID_NAME_LIST+='survey', String-column enums), business-logic-model.md (DDD layering; state machine + assertTransition/assertMutable; ingestSubmission flow [authz→validate→idempotency→parent-check→create→calc(port)→persist→photo(port)→audit→detail DTO], atomic single-tx, idempotent retries; approve/confirm/reject(deferred); reexamination via submission [no start API]; chooseOfficial; list/get minimal [full search in U5]; toSurveyDto/toSurveyDetailDto PII masking; 7 endpoints under api/private/surveys; PBT-06/02/04 plan), business-rules.md (BR-1..24, INV-1..5, validation table, authz/audit/error-mapping rules). Awaiting approval to proceed to U2 Code Generation.
+**Context**: CONSTRUCTION - U2 Functional Design COMPLETE, awaiting approval. Next: U2 Code Generation (Part 1 planning).
+
+---
+
+## Session Resume (続きから) — U2 Functional Design Approval Gate
+**Timestamp**: 2026-06-14T13:39:47+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: Detected existing AI-DLC project (CATAPULT / survey). Read aidlc-state.md and loaded artifacts per session-continuity rules: U2 functional-design (domain-entities.md, business-logic-model.md, business-rules.md) and the unit-of-work.md definition/dependencies (U2 depends on U1 + U-Cross, both COMPLETE & APPROVED). Current position confirmed: CONSTRUCTION → U2 (調査管理 Survey 集約＋提出時一括同期 API), Functional Design COMPLETE, awaiting explicit approval. Re-presented standardized 2-option completion message (Request Changes / Continue to U2 Code Generation). No code changes made; awaiting user decision.
+**Context**: CONSTRUCTION - U2 Functional Design approval gate. Next on approval: U2 Code Generation (Part 1 planning).
+
+---
+
+## U2 Functional Design Approval + Code Generation Plan (Part 1)
+**Timestamp**: 2026-06-14T13:44:21+09:00
+**User Input**: "承認" (approve U2 functional design)
+**AI Response**: Recorded U2 Functional Design APPROVED. Per Q8=A: NFR Requirements/Design + Infrastructure Design SKIP. Analyzed existing code patterns (domain/user + domain/audit DDD layering: controller[zod+L1 authz]→useCase[transaction/audit/ports]→method[pure/L2]→store[command/query/toDto]; brandedId via ID_NAME_LIST; String-column enums + zod; auditUseCase.record same-tx; velona depend available ^0.8.0; ulid; fast-check@3.23.2; vite.config 100% coverage on domain/common/api/{controller,hooks,validators}). Created Code Generation Plan (Part 1) at aidlc-docs/construction/plans/U2-code-generation-plan.md (Steps 1–12: (1) constants ID_NAME_LIST+='survey' + SURVEY_TYPE/STATUS/STRUCTURE lists+display maps; (2) common/validators/survey.ts submissionBody/chooseOfficialBody reusing U-Cross primitives + superRefine first/second exclusivity; (3) survey model types/entities; (4) surveyMethod createFromSubmission/assertTransition/assertMutable/assertReexaminationAllowed/assertOfficialTarget/approve/confirm/applyOfficial; (5) ports assessmentPort[U3a/U3b]/photoPort[U4] via velona depend with deterministic U2 stubs; (6) store toSurveyDto[PII-masked]/toSurveyDetailDto[PII] + surveyCommand.upsert + surveyQuery findById/listByParent/list; (7) surveyUseCase ingestSubmission[authz→idempotency(confirmed→403/submitted|approved→overwrite/none→create)→parent-confirmed-check→create→port calc→upsert→port persist→audit survey.submit + pii.change→detail DTO], approve/confirm[admin, confirm idempotent], chooseOfficial[admin], get/list/getHouseResults, reject deferred; (8) API 6 endpoints under api/private/surveys (submission POST, GET list, GET :id detail, approve/confirm/official POST); (9) Prisma Survey/FirstSurvey/SecondSurvey [String enums, Json for floorApportionment/partDamages/externalForceFlags/assessmentBasis] + migrate dev add_survey [additive]; (10) tests unit surveyMethod + PBT INV-1/4/5, surveyDto round-trip INV-2, api surveys.test.ts incl idempotency INV-3; (11) u2-summary.md; (12) generate+tsc+test 100% coverage). Updated aidlc-state.md. prisma migrate execution gated on plan approval.
+**Approval Prompt**: "U2 code generation plan complete (Steps 1–12). Ready to proceed to generation (Part 2)? A) 承認 B) 変更を依頼"
+**Context**: CONSTRUCTION - U2 Code Generation Part 1 (Planning) COMPLETE. Awaiting plan approval before executing Part 2. No code written yet.
+
+---
+
+## Session Resumption
+**Timestamp**: 2026-06-14T16:31:22+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: Read aidlc-state.md + loaded U2 artifacts (U2-code-generation-plan.md Steps 1–12, functional-design/). Current position: CONSTRUCTION → U2, Code Generation Part 1 (Planning) COMPLETE, awaiting plan approval to execute Part 2. Presented Welcome Back prompt.
+**Context**: Session continuity. Next action gated on user approval of U2 code generation plan (incl. prisma migrate dev --name add_survey, additive).
+
+---
+
+## U2 Code Generation Plan Approval → Part 2 Execution
+**Timestamp**: 2026-06-14T16:32:45+09:00
+**User Input**: "A"
+**AI Response**: User approved U2 code generation plan (option A: 続きから実行). Proceeding to Code Generation Part 2 — executing Steps 1–12 from aidlc-docs/construction/plans/U2-code-generation-plan.md. Docker stack confirmed up (postgres/magnito/minio/inbucket). prisma migrate dev --name add_survey (additive) authorized by this approval.
+**Context**: CONSTRUCTION - U2 Code Generation Part 2 START.
+
+---
+
+## U2 Code Generation Part 2 Complete
+**Timestamp**: 2026-06-14T17:10:00+09:00
+**User Input**: (continuation of approved "A")
+**AI Response**: Executed U2 Code Generation Part 2 (Steps 1–12). Created domain/survey (model: surveyType/surveyMethod/surveyDispatch/surveyPolicy/surveyAudit; ports: assessmentPort/photoPort via velona depend with deterministic stubs; store: toSurveyDto[PII-masked + detail]/surveyCommand[upsert]/surveyQuery[findDetailById/findById/list/listByParent]; surveyUseCase[ingestSubmission(depend ports, RepeatableRead tx, idempotent, audit)/approve/confirm(idempotent no-op)/chooseOfficial/get(PII mask)/list/getHouseResults]). common/types/survey.ts + common/validators/survey.ts (submissionBody superRefine decomposed; chooseOfficialBody). common/constants ID_NAME_LIST+='survey' + SURVEY_TYPE/STATUS/STRUCTURE lists+display maps. API api/private/surveys: 7 endpoints (POST submission, GET list, GET :id detail+validators, POST approve/confirm/official, GET results[US-605 added, +1 over plan's 6]). Prisma Survey/FirstSurvey/SecondSurvey + migration 20260614074112_add_survey (additive). Tests: surveyFixtures + surveyMethod/surveyDispatch/surveyPolicy/surveyAudit/surveyValidator/surveyDto unit tests + api/private/surveys.test.ts. PBT INV-1 (transitions), INV-2 (round-trip), INV-3 (idempotency API), INV-4 (exclusivity), INV-5 (PII masking). VERIFICATION: npm run generate (prisma+frourio $server + aspida $api), tsc --noEmit PASS, npm test = 16 files/110 tests PASS, coverage ALL FILES 100%, eslint clean (complexity≤5/max-lines≤200/no-non-null-assertion/no-unnecessary-condition respected). Plan 27 checkboxes all [x]. Summary: aidlc-docs/construction/U2/code/u2-summary.md.
+**Approval Prompt**: "Code Generation Complete - U2. Request Changes OR Continue to Next Stage (U3c)?"
+**Context**: CONSTRUCTION - U2 Code Generation Part 2 COMPLETE. Awaiting user approval before proceeding to U3c.
+
+---
+
+## U2 Code Generation Approval
+**Timestamp**: 2026-06-14T17:35:34+09:00
+**User Input**: "承認"
+**AI Response**: U2 Code Generation APPROVED. Marked U2 complete in aidlc-state.md. Proceeding to next unit in build order: U3c (被害度区分マスタ). Starting U3c per-unit loop with Functional Design assessment.
+**Context**: CONSTRUCTION - U2 COMPLETE & APPROVED. Transition to U3c.
+
+---
+
+## U3c Functional Design — Planning + Questions
+**Timestamp**: 2026-06-14T17:36:00+09:00
+**User Input**: (proceeding from U2 approval)
+**AI Response**: Started U3c (計算コア assessment-core) per-unit loop. Functional Design EXECUTE (new domain masters + complex calc logic + invariants). Created aidlc-docs/construction/plans/U3c-functional-design-plan.md with FD plan (Steps A–D) and 10 clarifying questions (Q1 6-region thresholds, Q2 enum keys, Q3 master-values source [CRITICAL: PDFs not text-extractable, no pdftotext], Q4 structure scope wood/nonWood, Q5 applyFloorRatio semantics, Q6 AssessmentResult canonical location, Q7 basis structure, Q8 rounding, Q9 PBT invariants, Q10 first-survey 6-region). Awaiting [Answer]: tags.
+**Context**: CONSTRUCTION - U3c Functional Design planning. Awaiting user answers before generating FD artifacts.
+
+---
+
+## Session Resume (続きから) — U3c Functional Design Answers Received
+**Timestamp**: 2026-06-14T22:08:44+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: Read aidlc-state.md + U3c-functional-design-plan.md. Confirmed all 10 clarifying questions answered (Q1–Q10 all = A): Q1 FR-24 thresholds as-is, Q2 enum keys totalCollapse/largeScaleHalf/mediumScaleHalf/half/quasiHalf/partial + JP display, Q3=A configurable master structure with documented placeholder representative values (single source of truth assessment/constants; PDFs not text-extractable), Q4 wood+nonWood master switch, Q5 floor-area weighted average applyFloorRatio, Q6 canonical AssessmentResult/DamageLevel in U3c (U2 references), Q7 structured basis (per-part/per-floor intermediates), Q8 high-precision internal + round to 0.1 at classify/display, Q9 PBT invariants [range/determinism/monotonicity/region-consistency/apportionment-conservation], Q10 first-survey also computes ratio→6region. Loaded server/common/types/survey.ts (provisional AssessmentResult), common/constants/index.ts, requirements FR-20~30/NFR-04. No ambiguity detected → no clarification file needed. Generating FD artifacts to aidlc-docs/construction/U3c/functional-design/.
+**Context**: CONSTRUCTION - U3c Functional Design. Answers complete, no ambiguity. Generating Step A–D artifacts.
+
+---
+
+## U3c Functional Design — Artifacts Generated (Steps A–D)
+**Timestamp**: 2026-06-14T22:09:30+09:00
+**User Input**: (continuation of "続きから"; all plan answers Q1–Q10 = A)
+**AI Response**: Generated U3c Functional Design artifacts to aidlc-docs/construction/U3c/functional-design/: (1) domain-entities.md — DamageLevel enum (totalCollapse/largeScaleHalf/mediumScaleHalf/half/quasiHalf/partial + JP display, to add to common/constants), canonical AssessmentResult/AssessmentBasis (First/Second discriminated) in common/types/assessment.ts, FirstAssessmentInput/SecondAssessmentInput, master types (DamageLevelThreshold[FR-24 fixed], PartComposition[wood/nonWood placeholder], InundationDepthBand/TiltBand/DEFAULT_FLOOR_RATIO placeholders), placement under domain/assessment/. (2) business-logic-model.md — classifyDamageLevel, applyFloorRatio (floor-area weighted avg), computeFirstAssessment (external-force→100% else tilt+inundation sum), computeSecondAssessment (Σ partDamage×composition), roundRatio (0.1 round, Q8), determinism/DI notes. (3) business-rules.md — BR-1~37 + PBT INV-1~8 (range/determinism/monotonicity/region-consistency/apportionment-conservation + external-force/composition/basis-sum), generator strategy, fail-closed validation boundary. Marked all 4 plan steps [x]. Updated aidlc-state.md (U3c FD COMPLETE, awaiting approval). No ambiguity → no clarification file.
+**Approval Prompt**: "Functional Design Complete - U3c. Request Changes OR Continue to Next Stage (Code Generation; NFR Req/Design + Infra SKIP)?"
+**Context**: CONSTRUCTION - U3c Functional Design COMPLETE. Awaiting explicit approval before NFR/Code Generation.
+
+---
+
+## U3c Functional Design Approval → Code Generation Plan (Part 1)
+**Timestamp**: 2026-06-14T23:05:10+09:00
+**User Input**: "承認"
+**AI Response**: U3c Functional Design APPROVED. NFR Requirements/Design SKIP (pure deterministic calculation, perf negligible; PBT folded into code gen per NFR-04). Infrastructure Design SKIP (no persistence/infra). Proceeding to Code Generation Part 1 (Planning). Inspected existing patterns: domain/survey (model/store/ports velona depend), assessmentPort stub (calcFirst/calcSecond returning damageRatio=0/'unclassified'), surveyPolicy, common/constants (*_LIST + listToDict + *_DISPLAY), common/types/survey.ts (provisional AssessmentResult/FirstSurveyData/SecondSurveyData/ExternalForceFlags/FloorRatio/PartDamage), vite coverage 100% on domain/**, common/**, api/**/{controller,hooks,validators}.ts, fast-check@3.23.2 PBT convention. Creating U3c-code-generation-plan.md.
+**Context**: CONSTRUCTION - U3c Code Generation Part 1 (Planning). NFR/Infra SKIP. No code written yet.
+
+---
+
+## U3c Code Generation Plan (Part 1) Complete — Approval Prompt
+**Timestamp**: 2026-06-14T23:06:00+09:00
+**AI Response**: Created aidlc-docs/construction/plans/U3c-code-generation-plan.md (Steps 1–13): (1) DAMAGE_LEVEL_LIST/_NAMES/_DISPLAY in common/constants; (2) canonical types common/types/assessment.ts (DamageLevel/AssessmentResult/AssessmentBasis[First|Second]/PartContributionDetail/FloorApportionmentBasis/inputs); (3) reconcile common/types/survey.ts AssessmentResult → re-export (non-breaking, verify U2 tsc/tests); (4) master constants domain/assessment/constants/* (thresholds[FR-24 fixed], partComposition[wood/nonWood placeholder], inundationDepthTable/tiltTable/defaultFloorRatio placeholders, @source tagged); (5) domain types; (6) classifyDamageLevel + roundRatio/clamp; (7) applyFloorRatio (weighted avg, BR-20 ValidationError); (8) computeFirstAssessment (external-force→100% else tilt+inundation); (9) computeSecondAssessment (Σ part×composition, undefined-part/range ValidationError); (10) barrel exports; (11) unit tests + PBT INV-1~8 (assessmentFixtures fc generators); (12) u3c-summary.md; (13) verify generate/tsc/test 100% cov(domain+common)/eslint + U2 non-regression. NO Prisma/migration (pure calc). NO assessmentPort wiring (U3a/U3b). Updated aidlc-state.md.
+**Approval Prompt**: "U3c code generation plan complete (Steps 1–13). Proceed to generation (Part 2)? A) 承認 B) 変更を依頼"
+**Context**: CONSTRUCTION - U3c Code Generation Part 1 COMPLETE. Awaiting plan approval before Part 2. No code written yet.
+
+---
+
+## U3c Code Generation Plan Approval → Part 2 Execution
+**Timestamp**: 2026-06-14T23:23:57+09:00
+**User Input**: "A"
+**AI Response**: User approved U3c code generation plan (option A). Executing Code Generation Part 2 — Steps 1–13 from aidlc-docs/construction/plans/U3c-code-generation-plan.md. No Prisma/migration (pure calc). No assessmentPort wiring (U3a/U3b).
+**Context**: CONSTRUCTION - U3c Code Generation Part 2 START.
+
+---
+
+## U3c Code Generation Part 2 Complete — Approval Prompt
+**Timestamp**: 2026-06-14T23:41:00+09:00
+**User Input**: (continuation of approved "A")
+**AI Response**: Executed U3c Code Generation Part 2 (Steps 1–13). Created common/types/assessment.ts (canonical DamageLevel/AssessmentResult/AssessmentBasis[First|Second]/PartContributionDetail/FloorApportionmentBasis/inputs); domain/assessment/{types.ts, round.ts, lookupBandRatio.ts, classifyDamageLevel.ts, applyFloorRatio.ts, computeFirstAssessment.ts, computeSecondAssessment.ts} and constants/{damageLevelThresholds[FR-24 fixed], partComposition[wood/nonWood placeholder], inundationDepthTable, tiltTable, defaultFloorRatio}. Modified common/constants/index.ts (DAMAGE_LEVEL_LIST/_NAMES/_DISPLAY) and common/types/survey.ts (comment only — kept loose AssessmentResult to avoid breaking U2: surveys.test 'unclassified' stub, surveyMethod.test 'halfDestroyed'). DEVIATION from plan Step 3 (re-export) and Step 10 (barrel): verification showed strict re-export breaks U2 tests, and an unused barrel index.ts fails coverage `all` 100% — so kept canonical/loose types as coexisting layers (structurally assignable) and used per-function named exports (matches domain/survey convention). Coverage design: descending tables use min-only, ascending tables use upper-only to avoid unreachable branches; find-undefined guarded via customAssert (service/, excluded from coverage). Tests: assessmentFixtures + classifyDamageLevel/applyFloorRatio/computeFirst/computeSecond (PBT INV-1~8). VERIFICATION: tsc --noEmit PASS; npm test = 20 files/156 tests PASS (U3c +5 files/+46 tests); coverage All files 100%; eslint clean (complexity≤5/max-depth≤2/max-nested-callbacks≤3/no-non-null-assertion/no-unnecessary-condition/OptionalChain-ban respected). NO Prisma/migration. Plan 38 checkboxes all [x]. Summary: aidlc-docs/construction/U3c/code/u3c-summary.md. Updated aidlc-state.md.
+**Approval Prompt**: "Code Generation Complete - U3c. Request Changes OR Continue to Next Stage (U3a 第1次調査)?"
+**Context**: CONSTRUCTION - U3c Code Generation Part 2 COMPLETE. Awaiting user approval before proceeding to U3a.
+
+---
+
+## Session Resume (U3c Code Generation — awaiting approval)
+**Timestamp**: 2026-06-15T08:32:19+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: aidlc-state.md を読み再開。CONSTRUCTION → U3c Code Generation Part 2 完了・承認待ちを確認。u3c-summary.md の検証結果（tsc PASS / 156テスト PASS / カバレッジ100% / eslint クリーン / Prisma 変更なし）を再掲し、標準2択完了メッセージを提示。
+**Context**: CONSTRUCTION phase, U3c (assessment-core), Code Generation Step 14-15 (completion message + awaiting explicit approval)
+
+---
+
+## U3c Code Generation — Approval
+**Timestamp**: 2026-06-15T08:36:34+09:00
+**User Input**: "承認して、1度gitでcommitします"
+**AI Response**: U3c Code Generation を承認。aidlc-state.md を U3c COMPLETE & APPROVED に更新。git commit を支援（status 確認 → ステージ → コミット）。承認後の次ステージは U3a（第1次判定, computeFirstAssessment を assessmentPort.calcFirst へ depend 注入）。
+**Context**: CONSTRUCTION phase, U3c (assessment-core), Code Generation Step 16 (record approval), then git commit checkpoint
+
+---

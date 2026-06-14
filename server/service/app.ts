@@ -9,9 +9,12 @@ import { IS_PROD } from 'common/constants';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import Fastify from 'fastify';
 import buildGetJwks from 'get-jwks';
+import type { DtoId } from 'common/types/brandedId';
+import { auditUseCase } from 'domain/audit/auditUseCase';
 import server from '../$server';
 import { COOKIE_NAMES, JWT_PROP_NAME } from './constants';
-import { CustomError } from './customAssert';
+import { resolveBody, resolveHttpStatus } from './errorHandler';
+import { prismaClient } from './prismaClient';
 import {
   API_BASE_PATH,
   COGNITO_POOL_ENDPOINT,
@@ -24,7 +27,13 @@ export const init = (): FastifyInstance => {
   const fastify = Fastify();
   const getJwks = buildGetJwks();
 
-  fastify.register(helmet);
+  // API はJSON応答。CSP は HTML 配信側（Next.js, U6u）で付与する役割分担（Q9=A）。
+  fastify.register(helmet, {
+    contentSecurityPolicy: false,
+    hsts: { maxAge: 15552000, includeSubDomains: true },
+    frameguard: { action: 'deny' },
+    noSniff: true,
+  });
   fastify.register(fastifyEtag, { weak: true });
   fastify.register(cookie);
   fastify.register(fastifyJwt, {
@@ -54,12 +63,27 @@ export const init = (): FastifyInstance => {
     });
   }
 
-  fastify.setErrorHandler((err, req, reply) => {
-    console.error(new Date(), err.stack);
+  // 型ベースのエラー→HTTP マッピング（BR-7, fail closed）。認可失敗(403)は監査記録する。
+  fastify.setErrorHandler(async (err, req, reply) => {
+    const status = resolveHttpStatus(err);
 
-    reply
-      .status(req.method === 'GET' ? 404 : 403)
-      .send(err instanceof CustomError ? err.message : undefined);
+    if (status >= 500) console.error(new Date(), (err as Error).stack);
+
+    if (status === 403) {
+      // best-effort 監査（記録失敗は本処理を妨げない）。
+      await auditUseCase
+        .record(prismaClient, {
+          actorUserId: (req as { user?: { id: DtoId['user'] } }).user?.id ?? null,
+          action: 'authz.failure',
+          targetType: 'authz',
+          targetId: null,
+          outcome: 'failure',
+          summary: `認可失敗: ${req.method} ${req.routeOptions.url ?? req.url}`,
+        })
+        .catch(() => undefined);
+    }
+
+    return reply.status(status).send(resolveBody(err, status));
   });
 
   server(fastify, { basePath: API_BASE_PATH });

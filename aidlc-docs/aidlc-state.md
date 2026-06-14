@@ -4,7 +4,7 @@
 - **Project Type**: Brownfield
 - **Project Name**: CATAPULT (aspida + frourio FullStack TypeScript テンプレート)
 - **Start Date**: 2026-06-12T13:42:11+09:00
-- **Current Stage**: INCEPTION - Units Generation complete (Part 2 artifacts generated), awaiting approval to enter CONSTRUCTION
+- **Current Stage**: CONSTRUCTION - U3c COMPLETE & APPROVED (2026-06-15); next U3a
 
 ## Workspace State
 - **Existing Code**: Yes
@@ -52,12 +52,18 @@
 - [x] **U0** デモ削除・基盤整備 — Completed & Approved 2026-06-13T18:14:10+09:00
   - Functional/NFR/Infra Design: SKIP
   - Code Generation: DONE (Part 1 approved + Part 2 executed). Server typecheck PASS. Client typecheck blocked by pre-existing pathpida×next15 incompat (unrelated to U0). prisma migrate deferred to U1.
-- [ ] **U1** 認証・ユーザー/ロール基盤 — Functional Design APPROVED 2026-06-13T19:21:11+09:00; Code Generation **COMPLETE (Part 1 + Part 2 executed)** 2026-06-13T22:42+09:00 — awaiting approval to proceed to U-Cross
+- [x] **U1** 認証・ユーザー/ロール基盤 — Functional Design APPROVED 2026-06-13T19:21:11+09:00; Code Generation **COMPLETE & APPROVED** 2026-06-13T22:48:57+09:00
   - Functional Design: DONE & APPROVED (domain-entities/business-logic-model/business-rules). NFR Req/Design + Infra: SKIP.
   - Code Generation: DONE. tsc --noEmit PASS. `npm test` = 34 tests PASS, coverage 100% (domain/**, common/**, api/**/{controller,hooks,validators}.ts). Migration `20260613132539_add_user_roles` applied (Role enum + User.roles[] + demo Task drop + displayName NOT NULL). fast-check@3.23.2 pinned. Summary: `aidlc-docs/construction/U1/code/u1-summary.md`.
   - Resume answers: Q-RESUME-1=A (plan approved), Q-RESUME-2=A (fast-check added), Q-RESUME-3=A (migrate dev executed).
   - Key decisions: Q1=B(DB source of truth), Q3=B(multi-role any-match), Q4=B(no-role=deny-all), Q5=A(en enum+JP map), Q6=A(ForbiddenError→403 fail-closed), Q7=A(viewer all-read), Q8=B(surveyor mutual draft edit), Q9=B+FU-1=B(admin needs surveyor role for input/submit/2nd-start), FU-2=A(env/seed initial admin), FU-3=A(admin-only role mgmt API + self-lock & last-admin guards), Q11=A(PBT authz matrix).
-- [ ] U-Cross / U2 / U3c / U3a / U3b / U4 / U5 / U6f / U6u — Pending
+- [x] **U-Cross** 横断（監査ログ・入力検証・暗号化・セキュア既定） — Functional Design APPROVED 2026-06-13T23:04; Infra(light) DONE; Code Generation **COMPLETE & APPROVED** 2026-06-14T01:32:28+09:00。tsc PASS, `npm test` 53 passed, coverage 100%。migration `20260613142321_add_audit_log` 適用。Summary: `construction/U-Cross/code/u-cross-summary.md`。
+- [x] **U2** 調査管理（Survey 集約）＋提出時一括同期 API — Functional Design **APPROVED** 2026-06-14T13:44:21+09:00。NFR Req/Design + Infra SKIP (Q8=A)。Code Generation Part 1 (Planning) APPROVED 2026-06-14T16:32:45。**Code Generation COMPLETE & APPROVED** 2026-06-14T17:35:34+09:00。
+  - Code Generation: DONE。tsc --noEmit PASS、`npm test` 16ファイル/110テスト PASS、coverage ALL FILES 100%（domain/**・common/**・api/**/{controller,hooks,validators}.ts）。eslint クリーン。migration `20260614074112_add_survey`（加法的）適用。generate=prisma+frourio($server)+aspida($api)。Summary: `aidlc-docs/construction/U2/code/u2-summary.md`。計画27チェックボックス全 [x]。
+  - 構成: domain/survey（model: surveyType/surveyMethod/surveyDispatch/surveyPolicy/surveyAudit、ports: assessmentPort/photoPort[velona depend スタブ]、store: toSurveyDto/surveyCommand/surveyQuery、surveyUseCase[ingest/approve/confirm/chooseOfficial/get/list/getHouseResults]）、common/types/survey.ts・common/validators/survey.ts、api/private/surveys（7 endpoints: submission POST / GET list / GET :id / approve / confirm / official / results[US-605, 計画6に+1]）、Prisma Survey/FirstSurvey/SecondSurvey。
+  - 申し送り: U3a/U3b=assessmentPort 実装注入、U4=photoPort S3 実装、U3c=部位/階按分マスタ、U5=検索/一覧、U6f/U6u=クライアント同期、reject 後続。
+- [x] **U3c** 計算コア（assessment-core） — Functional Design DONE; Code Generation **COMPLETE & APPROVED** 2026-06-15T08:36:34+09:00。tsc PASS、`npm test` 20ファイル/156テスト PASS、coverage All files 100%、eslint クリーン、Prisma 変更なし。正準型 `common/types/assessment.ts`、`domain/assessment/**`（round/lookupBandRatio/classifyDamageLevel/applyFloorRatio/computeFirst/computeSecond/constants）。PBT INV-1〜8 網羅。Summary: `aidlc-docs/construction/U3c/code/u3c-summary.md`。
+  - [ ] U3a / U3b / U4 / U5 / U6f / U6u — Pending
 - [ ] Build and Test - EXECUTE (after all units)
 
 ### 🟡 OPERATIONS PHASE
@@ -65,9 +71,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U1 (auth/user/role foundation) — Code Generation **COMPLETE (Part 1 + Part 2)**, awaiting approval to proceed to U-Cross
-- **Next Action**: User reviews U1 implementation + `u1-summary.md` → approve → start **U-Cross** (error→HTTP 401/403/404 refinement + audit wiring)
-- **Status (U1 code-gen complete 2026-06-13T22:42)**: U0 & U1 complete. fast-check@3.23.2 pinned. Migration `20260613132539_add_user_roles` applied. tsc PASS; `npm test` 34 passed, coverage 100%. Local `client/.env`/`server/.env` (gitignored) created + docker compose stack used for API tests. NOTE: `npm run generate` does not regenerate `$api.ts`; run `npx aspida` (dev uses `frourio --watch`). Known pre-existing: client pathpida×next15.
+- **Current Stage**: U3a（第1次判定）— 開始待ち。U3c 承認済み・git コミット済み。
+- **Next Action**: U3a Functional Design 要否判定 → Code Generation。`computeFirstAssessment`（`domain/assessment/computeFirstAssessment`）を `assessmentPort.calcFirst` の depend 差替で注入。`FirstSurveyData` → `FirstAssessmentInput` 対応付け。
+- **U3c Status**: **COMPLETE & APPROVED 2026-06-15T08:36:34+09:00**。Summary: `aidlc-docs/construction/U3c/code/u3c-summary.md`。
+- **U2 Status**: **COMPLETE & APPROVED 2026-06-14T17:35:34+09:00**。Summary: `aidlc-docs/construction/U2/code/u2-summary.md`。
 
 ### Resume Notes (2026-06-13T22:42 — U1 CODE GENERATION COMPLETE)
 **WHERE WE ARE**: CONSTRUCTION → U1 完了。実装・マイグレーション・テスト（34 件 PASS / カバレッジ100%）・型チェック（PASS）すべて完了。サマリは `aidlc-docs/construction/U1/code/u1-summary.md`。

@@ -8,6 +8,7 @@ import { ForbiddenError, NotFoundError } from 'service/customAssert';
 import { prismaClient, transaction } from 'service/prismaClient';
 import { INITIAL_ADMIN_IDENTIFIERS } from 'service/envValues';
 import type { JwtUser } from 'service/types';
+import { auditUseCase } from 'domain/audit/auditUseCase';
 import { authMethod } from './model/authMethod';
 import { userMethod } from './model/userMethod';
 import { userCommand } from './store/userCommand';
@@ -56,8 +57,19 @@ export const userUseCase = {
       }
 
       const entity = userMethod.assignRoles(actor, target, payload.roles);
+      const saved = await userCommand.save(tx, entity);
 
-      // 監査記録（実施者・対象・前後 roles・日時）の呼出点。記録実体は U-Cross で接続（NFR-08/SECURITY-13）。
-      return await userCommand.save(tx, entity);
+      // ロール変更を監査記録（同一 tx で原子的, NFR-08/SECURITY-13）。roles は非 PII のためマスク不要。
+      await auditUseCase.record(tx, {
+        actorUserId: actor.id,
+        action: 'user.roles.change',
+        targetType: 'user',
+        targetId: payload.userId,
+        outcome: 'success',
+        summary: 'ロール変更',
+        changes: [{ field: 'roles', before: target.roles.join(','), after: saved.roles.join(',') }],
+      });
+
+      return saved;
     }),
 };
