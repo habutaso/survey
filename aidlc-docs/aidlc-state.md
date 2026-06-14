@@ -4,7 +4,7 @@
 - **Project Type**: Brownfield
 - **Project Name**: CATAPULT (aspida + frourio FullStack TypeScript テンプレート)
 - **Start Date**: 2026-06-12T13:42:11+09:00
-- **Current Stage**: CONSTRUCTION - U3c COMPLETE & APPROVED (2026-06-15); next U3a
+- **Current Stage**: CONSTRUCTION - U3a COMPLETE & APPROVED (2026-06-15); next U3b
 
 ## Workspace State
 - **Existing Code**: Yes
@@ -63,7 +63,8 @@
   - 構成: domain/survey（model: surveyType/surveyMethod/surveyDispatch/surveyPolicy/surveyAudit、ports: assessmentPort/photoPort[velona depend スタブ]、store: toSurveyDto/surveyCommand/surveyQuery、surveyUseCase[ingest/approve/confirm/chooseOfficial/get/list/getHouseResults]）、common/types/survey.ts・common/validators/survey.ts、api/private/surveys（7 endpoints: submission POST / GET list / GET :id / approve / confirm / official / results[US-605, 計画6に+1]）、Prisma Survey/FirstSurvey/SecondSurvey。
   - 申し送り: U3a/U3b=assessmentPort 実装注入、U4=photoPort S3 実装、U3c=部位/階按分マスタ、U5=検索/一覧、U6f/U6u=クライアント同期、reject 後続。
 - [x] **U3c** 計算コア（assessment-core） — Functional Design DONE; Code Generation **COMPLETE & APPROVED** 2026-06-15T08:36:34+09:00。tsc PASS、`npm test` 20ファイル/156テスト PASS、coverage All files 100%、eslint クリーン、Prisma 変更なし。正準型 `common/types/assessment.ts`、`domain/assessment/**`（round/lookupBandRatio/classifyDamageLevel/applyFloorRatio/computeFirst/computeSecond/constants）。PBT INV-1〜8 網羅。Summary: `aidlc-docs/construction/U3c/code/u3c-summary.md`。
-  - [ ] U3a / U3b / U4 / U5 / U6f / U6u — Pending
+- [x] **U3a** 第1次判定（calcFirst 本実装注入） — Functional/NFR/Infra SKIP; Code Generation **COMPLETE & APPROVED** 2026-06-15T08:58+09:00。tsc PASS、`npm test` 20ファイル/157テスト PASS、coverage All files 100%、eslint クリーン、Prisma 変更なし。`assessmentPort.calcFirst` の既定 compute を `computeFirstAssessment` へ差替（呼出点不変、calcSecond はスタブ据置）。surveys.test.ts を実値検証へ更新＋外力true(全壊)ケース追加。Summary: `aidlc-docs/construction/U3a/code/u3a-summary.md`。
+  - [ ] U3b / U4 / U5 / U6f / U6u — Pending
 - [ ] Build and Test - EXECUTE (after all units)
 
 ### 🟡 OPERATIONS PHASE
@@ -71,9 +72,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U3a（第1次判定）— 開始待ち。U3c 承認済み・git コミット済み。
-- **Next Action**: U3a Functional Design 要否判定 → Code Generation。`computeFirstAssessment`（`domain/assessment/computeFirstAssessment`）を `assessmentPort.calcFirst` の depend 差替で注入。`FirstSurveyData` → `FirstAssessmentInput` 対応付け。
-- **U3c Status**: **COMPLETE & APPROVED 2026-06-15T08:36:34+09:00**。Summary: `aidlc-docs/construction/U3c/code/u3c-summary.md`。
+- **Current Stage**: U3b（第2次判定）— 未着手。
+- **Next Action**: U3b（第2次, `computeSecondAssessment` を `assessmentPort.calcSecond` へ注入、SecondSurveyData→SecondAssessmentInput マッピング、surveys.test 第2次を実値化）。
+- **U3a Status**: **COMPLETE & APPROVED 2026-06-15T08:58+09:00**。tsc PASS / `npm test` 20ファイル157テスト PASS / coverage All files 100% / eslint クリーン / Prisma 変更なし。`assessmentPort.calcFirst` 本実装バインド（呼出点不変）。Summary: `aidlc-docs/construction/U3a/code/u3a-summary.md`。
+- **U3c Status**: **COMPLETE & APPROVED 2026-06-15T08:36:34+09:00**（git 739f38d）。Summary: `aidlc-docs/construction/U3c/code/u3c-summary.md`。
 - **U2 Status**: **COMPLETE & APPROVED 2026-06-14T17:35:34+09:00**。Summary: `aidlc-docs/construction/U2/code/u2-summary.md`。
 
 ### Resume Notes (2026-06-13T22:42 — U1 CODE GENERATION COMPLETE)

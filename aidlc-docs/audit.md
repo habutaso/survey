@@ -517,3 +517,28 @@
 **Context**: CONSTRUCTION phase, U3c (assessment-core), Code Generation Step 16 (record approval), then git commit checkpoint
 
 ---
+
+## U3a — Stage Start (FD/NFR/Infra SKIP) + Code Generation Part 1 (Plan)
+**Timestamp**: 2026-06-15T08:39:09+09:00
+**User Input**: "続きをお願いします"
+**AI Response**: U3a 開始。関連コード（assessmentPort/computeFirstAssessment/common types/surveyUseCase/surveyDispatch/submission controller/surveys.test）を精査。Functional Design=SKIP（新規モデル/ロジックなし、U3cで設計済み）、NFR Req/Design+Infra=SKIP。型確認: FirstSurveyData≡FirstAssessmentInput、正準AssessmentResult⊆緩い境界型。Code Generation Part 1 計画を `aidlc-docs/construction/plans/U3a-code-generation-plan.md` に作成し承認待ち。
+**Context**: CONSTRUCTION phase, U3a, Functional/NFR/Infra SKIP + Code Generation Step (Part 1 planning, awaiting plan approval)
+
+---
+
+## U3a Code Generation — Part 1 Plan Approved + Part 2 Executed
+**Timestamp**: 2026-06-15T08:41:53+09:00
+**User Input**: "承認"
+**AI Response**: U3a Code Generation 計画を承認受領 → Part 2 実行。assessmentPort.calcFirst 既定 compute を computeFirstAssessment へ差替（呼出点不変、calcSecond スタブ据置）。surveys.test.ts を実値検証へ更新＋外力true(全壊)ケース追加。検証: tsc PASS / `npm test` 20ファイル157テスト PASS / coverage All files 100% / eslint クリーン / Prisma 変更なし。Summary: `aidlc-docs/construction/U3a/code/u3a-summary.md`。計画12チェックボックス全[x]。標準2択完了メッセージを提示し承認待ち。
+**Context**: CONSTRUCTION phase, U3a, Code Generation Part 2 complete (Step 14-15: completion message + awaiting explicit approval)
+
+---
+
+
+## U3a Code Generation - Resume Verification & Approval
+**Timestamp**: 2026-06-15T08:58:12+09:00
+**User Input**: "前回途中でセッションを切ってしまったため、u3aの状況を確認してください" / "B gitにコミットしてください"
+**AI Response**: U3a の実状況を実検証（tsc PASS / npm test 20ファイル157テスト PASS / coverage 100% / assessmentPort.ts に computeFirstAssessment バインド確認 / 変更は未コミット）。ユーザーが選択肢B（承認＋コミット）を選択。U3a を COMPLETE & APPROVED として記録し、git コミットを実施。
+**Context**: CONSTRUCTION → U3a Code Generation Part 2 承認。次は U3b。
+
+---
