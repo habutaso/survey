@@ -560,3 +560,115 @@
 **Context**: CONSTRUCTION → U3b Code Generation Part 2 承認。
 
 ---
+
+
+## U4 Functional Design - Clarifying Questions
+**Timestamp**: 2026-06-15T09:18:25+09:00
+**User Input**: Q-U4-1="A" / Q-U4-2="A" / Q-U4-3="C" / Q-U4-4="B" / Q-U4-5="A"
+**AI Response**: U4（画像管理）の設計判断を確定。Q-U4-1=A（署名付きPUT URL方式）、Q-U4-2=A（非公開バケット・presigned経由のみ・サーバ認可）、Q-U4-3=C（調査＋部位＋ステップ紐付け）、Q-U4-4=B（確認方式: pending→uploaded、未確認は閲覧不可）、Q-U4-5=A（キー=surveys/{surveyId}/{photoId}、GET 24h / PUT 15分）。Functional Design 文書を作成。
+**Context**: CONSTRUCTION → U4 Functional Design。
+
+---
+
+
+## U4 Functional Design - Approval → Infrastructure Design
+**Timestamp**: 2026-06-15T09:20:58+09:00
+**User Input**: "B"（Functional Design 承認 → Infrastructure Design へ）
+**AI Response**: U4 Functional Design（domain-entities / business-logic-model / business-rules）を承認として記録。Infrastructure Design（light）を作成（S3 非公開バケット・SSE・presigned 期限・CORS・MinIO ローカル整合）。
+**Context**: CONSTRUCTION → U4 Functional Design 承認、Infrastructure Design 開始。
+
+---
+
+
+## U4 Infrastructure Design - Approval → Code Generation (Part 1)
+**Timestamp**: 2026-06-15T09:21:58+09:00
+**User Input**: "B"（Infrastructure Design 承認 → Code Generation へ）
+**AI Response**: U4 Infrastructure Design（light）を承認として記録。Code Generation Part 1（計画 `U4-code-generation-plan.md`）を作成。
+**Context**: CONSTRUCTION → U4 Infrastructure Design 承認、Code Generation Part 1 開始。
+
+---
+
+
+## Session Resume — U4 Code Generation (Part 1 awaiting approval)
+**Timestamp**: 2026-06-15T09:57:54+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: aidlc-state.md と直近 audit を読み込み、CONSTRUCTION → U4 で再開。U4 は Functional/Infrastructure Design 承認済み、Code Generation Part 1 計画（`construction/plans/U4-code-generation-plan.md`）作成済みで承認待ち。Welcome Back プロンプトを提示し、Part 1 計画承認の可否を確認。
+**Context**: CONSTRUCTION → U4 Code Generation Part 1（Planning）承認待ち。
+
+---
+
+
+## U4 Code Generation (Part 1 Planning approved + Part 2 Generation) — COMPLETE, awaiting approval
+**Timestamp**: 2026-06-15T10:05:00+09:00
+**User Input**: "A"（Welcome Back: Part 1 計画を承認し Part 2 実行）
+**AI Response**: U4 Code Generation を実施。再開時に前セッションが大半のコードを生成済み（未コミット）であることを確認し、完全性を検証のうえ修正して完了。実装: `photoPort` を presigned PUT URL 方式の本実装へ（Photo pending 作成→PUT 15分発行→提出応答に photoUploadTickets 同梱）、`photoUseCase`（confirmUploaded 冪等＋所属検証＋監査 photo.uploadConfirmed / listForSurvey uploaded のみ GET 24h）、domain/photo（model/store）、common/types/photo.ts・validators/photo.ts、constants に photo+PHOTO_STATUS_LIST、API `GET photos`／`POST photos/confirm`、Prisma `Photo` + migration `20260615002626_add_photo`（加法的）、`s3.putSignedUrl`。修正: photoCommand.create の uploadedAt を null 固定（BR-P7 不変条件、到達不能分岐除去で branch 100%）、vite testTimeout 15000→30000（magnito 累積レイテンシ吸収、ロジック不具合は隠蔽されず）、photoMethod.test の lint 修正（未使用 import/不要アサーション/nested-callbacks）、prisma format の付随整形を revert。検証: tsc PASS / `npm test` 21ファイル171テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Photo モデル+Survey.photos のみ。PBT INV-P1/P3。計画23チェックボックス全[x]。Summary: `construction/U4/code/u4-summary.md`。標準2択完了メッセージを提示し承認待ち。
+**Context**: CONSTRUCTION → U4 Code Generation Part 2 完了、承認待ち。次は U5。
+
+---
+
+
+## U4 Code Generation - Approval → U5
+**Timestamp**: 2026-06-15T12:21:23+09:00
+**User Input**: "B"（Continue to Next Stage = U5）
+**AI Response**: U4 Code Generation を **COMPLETE & APPROVED** として記録（2026-06-15T12:21）。U4 の変更は未コミット（ユーザーがコミットを明示要求していないため保留。要求があればコミット）。U5（結果出力・一覧）の per-unit ループを開始 — Functional Design から着手。
+**Context**: CONSTRUCTION → U4 承認、U5 開始。
+
+
+## U5 Functional Design - Clarifying Questions
+**Timestamp**: 2026-06-15T12:22:00+09:00
+**User Input**: （前メッセージ "B" で U5 開始）
+**AI Response**: U5（結果出力・一覧）の Functional Design を開始。ユニット定義・US-701/702/703・FR-31/32/33・NFR-03・SECURITY-08・応用設計（export §1.7/§7）・現状コード（surveyQuery.list 全件/フィルタなし、PDF/CSV ライブラリ未導入、docs/references の様式 PDF）を読み込み、機能設計プラン `construction/plans/U5-functional-design-plan.md` を作成。設計判断のための質問 Q-U5-1〜11（PDF 生成方式・CSV/Excel 範囲・検索フィルタ・ページング方式・一覧認可スコープ・PDF/CSV の認可と PII・出力エンドポイント形態・検索エンドポイント・PDF 単位・日本語フォント同梱）を [Answer]: タグ付きで提示。回答待ち。
+**Context**: CONSTRUCTION → U5 Functional Design、質問提示・回答待ち。
+
+
+## U5 Functional Design - Answers & Artifacts
+**Timestamp**: 2026-06-15T12:36:00+09:00
+**User Input**: "完了"（U5-functional-design-plan.md に回答記入）。回答: Q-U5-1=A, Q-U5-2=A, Q-U5-3=B, Q-U5-4=A, Q-U5-5=B, Q-U5-6=C, Q-U5-7=A, Q-U5-8=B, Q-U5-9=A, Q-U5-10=B, Q-U5-11=A。
+**AI Response**: 回答を確定し U5 Functional Design 成果物を作成（domain-entities.md / business-logic-model.md / business-rules.md）。設計要点: pdfkit による家屋単位 PDF（admin のみ・PII 含む・日本語フォント同梱）、CSV(BOM, admin のみ・PII 含む)、検索は既存 GET /surveys を拡張フィルタ＋オフセットページング(total)＋ロールスコープ(surveyor=自分のみ, Q-U5-5=B)、生成物は S3 exports/ に保存し presigned URL を返す(Q-U5-8=B)、監査 export.pdf/export.csv 追加。2 件の横断的整合を明記: (1) Q-U5-5=B は U2 Q19=A を精緻化（surveyor は自分のみ、U2 list テストはコード生成で改訂）、(2) Q-U5-6=C は US-701 のアクターより厳格化（PDF admin 限定）。計画チェックボックス全 [x]。標準2択完了メッセージを提示し承認待ち。
+**Context**: CONSTRUCTION → U5 Functional Design 完了、承認待ち。次は Infrastructure Design（軽量）。
+
+
+## U5 Functional Design - Approval → Infrastructure Design
+**Timestamp**: 2026-06-15T12:41:35+09:00
+**User Input**: "承認"（Functional Design 承認 → 次ステージへ）
+**AI Response**: U5 Functional Design を承認として記録。Infrastructure Design（軽量）を開始（S3 exports 保存・presigned 期限・検索インデックス・CORS・MinIO 整合）。NFR Requirements/Design は NFR-03 をページング＋インデックスで充足するためスキップ。
+**Context**: CONSTRUCTION → U5 Functional Design 承認、Infrastructure Design 開始。
+
+
+## U5 Infrastructure Design - Approval → Code Generation (Part 1)
+**Timestamp**: 2026-06-15T12:45:28+09:00
+**User Input**: "承認"（Infrastructure Design 承認 → Code Generation へ）
+**AI Response**: U5 Infrastructure Design（軽量）を承認として記録。Code Generation Part 1（計画 `U5-code-generation-plan.md`）を作成。
+**Context**: CONSTRUCTION → U5 Infrastructure Design 承認、Code Generation Part 1 開始。
+
+---
+
+## Session Resume (Welcome Back)
+**Timestamp**: 2026-06-15T21:31:49+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: Detected existing AI-DLC project. Loaded aidlc-state.md + U5 functional/infrastructure design (approved) + pending U5-code-generation-plan.md. Current position: CONSTRUCTION → U5 (結果出力・一覧), Code Generation Part 1 plan awaiting approval. Presented Welcome Back prompt.
+**Context**: CONSTRUCTION - U5 resume. Next gate: approval of U5-code-generation-plan.md before implementation.
+
+## Session Resume (Welcome Back)
+**Timestamp**: 2026-06-15T22:16:44+09:00
+**User Input**: "using ai-dlc 続きから"
+**AI Response**: Reloaded aidlc-state.md and U5-code-generation-plan.md. Confirmed position: CONSTRUCTION → U5 (結果出力・一覧), Code Generation Part 1 plan awaiting approval. Re-presented the plan summary and approval gate.
+**Context**: CONSTRUCTION - U5 resume. Next gate: approval of U5-code-generation-plan.md before implementation (Part 2).
+
+## U5 Code Generation Part 1 - Approval → Part 2 (Implementation)
+**Timestamp**: 2026-06-15T22:18:59+09:00
+**User Input**: "A"（Continue to Next Stage — 計画承認、実装開始）
+**AI Response**: U5-code-generation-plan.md を承認として記録。Code Generation Part 2（実装）を開始。
+**Context**: CONSTRUCTION → U5 Code Generation Part 1 承認、Part 2 実装開始。
+
+## U5 Code Generation Part 2 - Complete
+**Timestamp**: 2026-06-15T22:20:00+09:00
+**User Input**: (none - implementation/verification stage)
+**AI Response**: U5（結果出力・一覧）Code Generation Part 2 を完了。前セッションで実装済みであった成果物を検証し、計画 29 チェック全 [x]・サマリ `construction/U5/code/u5-summary.md` 作成・aidlc-state.md 更新。検証結果: `npx tsc --noEmit` PASS / `npm test` 24ファイル201テスト PASS・coverage All files 100%（service/pdfRenderer は include 対象外）/ eslint クリーン / prisma schema 差分=Survey 4インデックス追加のみ + migration 20260615035439_add_survey_search_indexes（加法的）。pdfkit 0.19.1・@types/pdfkit 0.17.6 pinned、IPAexゴシック同梱。domain/export（exportUseCase velona DI / exportFormat / csvRenderer 純粋）、service/pdfRenderer.ts、API: surveys一覧拡張・_surveyId/pdf・export/csv。多層 fail-closed 認可・PII は admin 限定 PDF/CSV のみ・presigned 15分。未コミット。
+**Context**: CONSTRUCTION → U5 Code Generation 完了。標準2択完了メッセージを提示（Request Changes / Continue to Next Stage）。
+
+## U5 Code Generation - Approval → U6f
+**Timestamp**: 2026-06-15T22:39:51+09:00
+**User Input**: "A"（Continue to Next Stage — U5 承認、U6f へ）
+**AI Response**: U5 Code Generation を承認として記録。構築順序に従い次ユニット U6f（ローカルファースト基盤: IndexedDB＋同期）の per-unit ループを開始。クライアント構成を調査し Functional Design 要否を判断する。
+**Context**: CONSTRUCTION → U5 完了承認、U6f 着手。
