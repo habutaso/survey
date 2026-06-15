@@ -4,7 +4,7 @@
 - **Project Type**: Brownfield
 - **Project Name**: CATAPULT (aspida + frourio FullStack TypeScript テンプレート)
 - **Start Date**: 2026-06-12T13:42:11+09:00
-- **Current Stage**: CONSTRUCTION - U5 (結果出力・一覧) Code Generation COMPLETE 2026-06-15T22:20+09:00（承認待ち）; U4 COMPLETE & APPROVED
+- **Current Stage**: CONSTRUCTION - U5 (結果出力・一覧) Code Generation COMPLETE & APPROVED 2026-06-16T07:20+09:00; U6f IN PROGRESS (Functional Design)
 
 ## Workspace State
 - **Existing Code**: Yes
@@ -66,18 +66,22 @@
 - [x] **U3a** 第1次判定（calcFirst 本実装注入） — Functional/NFR/Infra SKIP; Code Generation **COMPLETE & APPROVED** 2026-06-15T08:58+09:00。tsc PASS、`npm test` 20ファイル/157テスト PASS、coverage All files 100%、eslint クリーン、Prisma 変更なし。`assessmentPort.calcFirst` の既定 compute を `computeFirstAssessment` へ差替（呼出点不変、calcSecond はスタブ据置）。surveys.test.ts を実値検証へ更新＋外力true(全壊)ケース追加。Summary: `aidlc-docs/construction/U3a/code/u3a-summary.md`。
   - [x] **U3b** 第2次判定（calcSecond 本実装注入） — Functional/NFR/Infra SKIP; Code Generation **COMPLETE & APPROVED** 2026-06-15T09:11+09:00。tsc PASS、`npm test` 20ファイル/157テスト PASS、coverage All files 100%、eslint クリーン、Prisma 変更なし。`assessmentPort.calcSecond` の既定 compute を `computeSecondAssessment` へ差替。`surveyDispatch.assessmentInput` の second 分岐で structureType を合成し SecondAssessmentInput を構成（呼出点不変）。Summary: `aidlc-docs/construction/U3b/code/u3b-summary.md`。
   - [x] **U4** 画像管理（写真の S3 保存） — Functional/Infrastructure Design APPROVED 2026-06-15T09:21+09:00; Code Generation **COMPLETE & APPROVED** 2026-06-15T12:21+09:00。tsc PASS / `npm test` 21ファイル171テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Photo モデル+Survey.photos のみ。`photoPort` を presigned PUT URL 方式の本実装へ（Photo pending 作成→PUT 15分発行→提出応答に tickets 同梱）、`photoUseCase`（confirmUploaded 冪等＋listForSurvey uploaded のみ GET 24h）、API GET photos / POST photos/confirm、Prisma Photo + migration `20260615002626_add_photo`（加法的）、`s3.putSignedUrl`。PBT INV-P1/P3。コミット済み（git 38428da, 2026-06-15）。Summary: `construction/U4/code/u4-summary.md`。
-  - [x] **U5** 結果出力・一覧 — Functional Design **APPROVED** 2026-06-15T12:41 / Infrastructure Design（軽量）**APPROVED** 2026-06-15T12:45 / Code Generation Part 1 計画 **APPROVED** 2026-06-15T22:18。**Code Generation COMPLETE（承認待ち）2026-06-15T22:20**。tsc PASS / `npm test` 24ファイル201テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Survey 4インデックス追加のみ + migration `20260615035439_add_survey_search_indexes`。pdfkit 0.19.1・@types/pdfkit 0.17.6 pinned、IPAexゴシック同梱。domain/export(exportUseCase velona DI / exportFormat / csvRenderer)、service/pdfRenderer.ts(coverage除外)、API: surveys一覧拡張 / `_surveyId/pdf` / `export/csv`。計画29チェック全[x]。判断: Q-U5-1=A(pdfkit)/2=A(CSV BOM)/3=B(拡張filter)/4=A(offset+total)/5=B(surveyor=自分のみ)/6=C(PDF admin)/7=A(CSV admin+PII)/8=B(S3 presigned)/9=A(list拡張)/10=B(家屋単位)/11=A(font同梱)。コミット済み（git 38428da, 2026-06-15）。Summary: `construction/U5/code/u5-summary.md`。
-  - [ ] U6f / U6u — Pending
-- [ ] Build and Test - EXECUTE (after all units)
+  - [x] **U5** 結果出力・一覧 — Functional Design **APPROVED** 2026-06-15T12:41 / Infrastructure Design（軽量）**APPROVED** 2026-06-15T12:45 / Code Generation Part 1 計画 **APPROVED** 2026-06-15T22:18。**Code Generation COMPLETE & APPROVED 2026-06-16T07:20+09:00**。tsc PASS / `npm test` 24ファイル201テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Survey 4インデックス追加のみ + migration `20260615035439_add_survey_search_indexes`。判断: Q-U5-1=A(pdfkit)/2=A(CSV BOM)/3=B(拡張filter)/4=A(offset+total)/5=B(surveyor=自分のみ)/6=C(PDF admin)/7=A(CSV admin+PII)/8=B(S3 presigned)/9=A(list拡張)/10=B(家屋単位)/11=A(font同梱)。Summary: `construction/U5/code/u5-summary.md`。
+  - [x] **U6f** ローカルファースト基盤（headless: IndexedDB暗号化・提出時同期） — Functional Design DONE; **Code Generation COMPLETE 2026-06-16T08:10+09:00**。tsc PASS / vitest 46テスト PASS / 対象(model/crypto/store/service) coverage 100% / eslint クリーン。`client/features/localFirst/`（types/crypto[draftCrypto AES-GCM256・sessionKeyProvider]/model[localDraft/toPayload/localPhoto/backoff/syncJob]/store[db/codec/localDraftStore idb8]/service[networkStatus/stages/syncService]/hooks/compose）。deps: idb@8.0.0・fast-check@3.23.2・fake-indexeddb@6.0.0 pinned、client vite.config.ts 追加、pathpida $path 生成で client typecheck 解消。Q1〜Q9=A。Summary: `construction/U6f/code/u6f-summary.md`。
+  - [x] **U6u** 画面ジャーニー UI — Functional Design DONE; **Code Generation COMPLETE 2026-06-16T08:35+09:00**。tsc PASS / vitest 8ファイル61テスト PASS / 対象(localFirst+survey/model) coverage 100% / eslint クリーン。`client/features/survey/`（model[wizardSteps/display 100%]・components[Stepper/NetworkBanner/SurveyWizard/SurveyList/HouseResults/steps×7/formKit]）＋ app ルート（/・/surveys/new・/surveys/[surveyId]）＋ BasicHeader ログアウト clearAll。pathpida $path 再生成。Summary: `construction/U6u/code/u6u-summary.md`。
+- [x] Build and Test - **COMPLETE 2026-06-16T08:45+09:00**（build/unit-test/integration-test/performance-test/security-test/summary 生成。server 201+ / client 61 tests PASS、カバレッジ対象 100%）
 
 ### 🟡 OPERATIONS PHASE
-- [ ] Operations - PLACEHOLDER
+- [ ] Operations - PLACEHOLDER（次フェーズ・承認待ち）
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U5（結果出力・一覧）— **Code Generation COMPLETE、承認待ち**。
-- **Next Action**: ユーザー承認後 U6f / U6u（クライアント）へ。
-- **U5 Status**: **COMPLETE（承認待ち）2026-06-15T22:20+09:00**。tsc PASS / `npm test` 24ファイル201テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Survey 4インデックス追加のみ + migration `20260615035439_add_survey_search_indexes`。検索/一覧（scopeForList ロールスコープ・buildSurveyWhere・offset ページング）、家屋単位 PDF（pdfkit・admin・PII・同梱フォント）、CSV（admin・PII・BOM・RFC4180）を S3+presigned(15分) で配信。domain は純粋＋velona DI。Summary: `construction/U5/code/u5-summary.md`。コミット済み（git 38428da, 2026-06-15）。
+- **Lifecycle Phase**: CONSTRUCTION 完了 → OPERATIONS（承認待ち）。
+- **Current Stage**: Build and Test **COMPLETE**。全ユニット U0〜U6u ＋ Build and Test 完了。
+- **Next Action**: ユーザー承認後 OPERATIONS（デプロイ計画・監視・本番インフラ設定）へ。
+- **Build and Test**: 指示書6本を `construction/build-and-test/` に生成。server 201+ / client 61 tests PASS、カバレッジ対象 All 100%、typecheck/lint エラー0。Summary: `construction/build-and-test/build-and-test-summary.md`。
+- **U6u Status**: **COMPLETE 2026-06-16T08:35+09:00**。Summary: `construction/U6u/code/u6u-summary.md`。
+- **U6f Status**: **COMPLETE 2026-06-16T08:10+09:00**。Summary: `construction/U6f/code/u6f-summary.md`。
+- **U5 Status**: **COMPLETE & APPROVED 2026-06-16T07:20+09:00**。Summary: `construction/U5/code/u5-summary.md`。
 - **Next Action (旧)**: ユーザー承認後 U5（検索/一覧）へ。
 - **U4 Status**: **COMPLETE（承認待ち）2026-06-15T10:05+09:00**。tsc PASS / `npm test` 21ファイル171テスト PASS / coverage All files 100% / eslint クリーン / schema 差分=Photo モデル+Survey.photos のみ。`photoPort` presigned PUT 本実装、`photoUseCase`（confirm 冪等・閲覧 uploaded のみ）、API GET/confirm、Prisma Photo + migration `20260615002626_add_photo`、`s3.putSignedUrl`。PBT INV-P1/P3。Summary: `construction/U4/code/u4-summary.md`。
 - **U3b Status**: **COMPLETE & APPROVED 2026-06-15T09:11+09:00**。tsc PASS / `npm test` 20ファイル157テスト PASS / coverage All files 100% / eslint クリーン / Prisma 変更なし。`assessmentPort.calcSecond` 本実装バインド、structureType は surveyDispatch で合成（呼出点不変）。Summary: `aidlc-docs/construction/U3b/code/u3b-summary.md`。

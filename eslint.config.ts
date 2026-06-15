@@ -83,5 +83,14 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['client/tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'max-lines': 'off',
+      'max-nested-callbacks': 'off',
+      '@typescript-eslint/require-await': 'off',
+    },
+  },
   prettierConfig,
 );

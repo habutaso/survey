@@ -26,6 +26,7 @@
     "aspida": "^1.14.0",
     "aws-amplify": "^6.9.0",
     "axios": "^1.7.7",
+    "idb": "8.0.0",
     "jotai": "^2.10.3",
     "next": "^15.5.18",
     "qrcode": "^1.5.4",
@@ -41,6 +42,8 @@
     "@types/react-dom": "^18.3.1",
     "@types/swagger-ui-react": "^4.18.3",
     "aspida2openapi": "^0.5.0",
+    "fake-indexeddb": "6.0.0",
+    "fast-check": "3.23.2",
     "happy-css-modules": "^3.2.0",
     "notios": "^0.5.3",
     "pathpida": "^0.24.0"

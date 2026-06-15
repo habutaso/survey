@@ -5,12 +5,18 @@ import type { UserDto } from 'common/types/user';
 import { Spacer } from 'components/Spacer';
 import { HumanIcon } from 'components/icons/HumanIcon';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/modal/Modal';
+import { localFirst } from 'features/localFirst';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { pagesPath } from 'utils/$path';
 import styles from './BasicHeader.module.css';
 import { YourProfile } from './YourProfile';
+
+// ログアウト時にローカル（IndexedDB）の下書き・画像を物理削除してからサインアウト（US-103 / Q9=A）。
+const signOutWithClear = (): void => {
+  void localFirst.store.clearAll().finally(() => void signOut());
+};
 
 const Menu = ({
   open,
@@ -68,7 +74,7 @@ export const BasicHeader = (props: { user: UserDto }) => {
           <Menu open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
             <MenuItem onClick={() => setOpenProfile(true)}>Your profile</MenuItem>
             <MenuItem onClick={() => setOpenPassword(true)}>Change password</MenuItem>
-            <MenuItem onClick={signOut}>Sign out</MenuItem>
+            <MenuItem onClick={signOutWithClear}>Sign out</MenuItem>
           </Menu>
         </div>
       </div>
@@ -77,7 +83,7 @@ export const BasicHeader = (props: { user: UserDto }) => {
         <ModalHeader text="Change password" />
         <ModalBody>
           <div className={styles.passwordContainer}>
-            <AccountSettings.ChangePassword onSuccess={signOut} />
+            <AccountSettings.ChangePassword onSuccess={signOutWithClear} />
           </div>
         </ModalBody>
         <ModalFooter cancelText="Close" cancel={() => setOpenPassword(false)} />
