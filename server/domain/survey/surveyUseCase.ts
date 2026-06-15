@@ -3,9 +3,12 @@ import type { DtoId } from 'common/types/brandedId';
 import type {
   AssessmentResult,
   HouseResultsDto,
+  Pagination,
   SubmissionPayload,
+  SubmissionResultDto,
   SurveyDetailDto,
-  SurveyDto,
+  SurveyListFilter,
+  SurveyListResult,
 } from 'common/types/survey';
 import type { UserDto } from 'common/types/user';
 import type { AuditEvent } from 'domain/audit/model/auditMethod';
@@ -58,10 +61,10 @@ const recordAll = async (tx: Prisma.TransactionClient, events: AuditEvent[]): Pr
 };
 
 export const surveyUseCase = {
-  // 提出時一括同期（US-207 / FR-18・19）。冪等・原子的。ポートは DI（U2 はスタブ既定）。
+  // 提出時一括同期（US-207 / FR-18・19）。冪等・原子的。ポートは DI。
   ingestSubmission: depend(
     { assessmentPort, photoPort },
-    (ports, actor: UserDto, payload: SubmissionPayload): Promise<SurveyDetailDto> =>
+    (ports, actor: UserDto, payload: SubmissionPayload): Promise<SubmissionResultDto> =>
       transaction('RepeatableRead', async (tx) => {
         surveyPolicy.assertSubmitter(actor);
 
@@ -76,11 +79,17 @@ export const surveyUseCase = {
         const entity = surveyMethod.applyAssessment(base, resolveAssessment(ports, base));
         const saved = await surveyCommand.upsert(tx, entity);
 
-        ports.photoPort.persist(tx, saved.id, payload.photos ?? []);
+        // 写真メタを永続化し presigned PUT URL チケットを取得（U4 / BR-P7）。
+        const photoUploadTickets = await ports.photoPort.persist(
+          tx,
+          saved.id,
+          payload.photos ?? [],
+          actor,
+        );
 
         await recordAll(tx, surveyAudit.submitEvents(actor, existing, saved));
 
-        return saved;
+        return { ...saved, photoUploadTickets };
       }),
   ),
 
@@ -149,8 +158,18 @@ export const surveyUseCase = {
     return surveyPolicy.maskPii(detail);
   },
 
-  // 全件読取（PII 除外, Q19=A）。本格検索/ページングは U5。
-  list: (): Promise<SurveyDto[]> => surveyQuery.list(prismaClient),
+  // 一覧・検索（U5 / US-703）。ロールスコープ（Q-U5-5=B）適用後に検索＋ページング。PII 除外。
+  list: (
+    actor: UserDto,
+    filter: SurveyListFilter,
+    pagination: Pagination,
+  ): Promise<SurveyListResult> => {
+    const scoped = surveyPolicy.scopeForList(actor, filter);
+
+    return surveyQuery
+      .search(prismaClient, scoped, pagination)
+      .then(({ items, total }) => ({ items, total, page: pagination.page, pageSize: pagination.pageSize }));
+  },
 
   // 第1次＋第2次群の結果併記（US-605）。PII 除外。
   getHouseResults: async (firstSurveyId: DtoId['survey']): Promise<HouseResultsDto> => {

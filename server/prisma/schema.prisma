@@ -67,12 +67,19 @@ model Survey {
   confirmedAt      DateTime?
   first            FirstSurvey?
   second           SecondSurvey?
+  photos           Photo[]
+
+  // 一覧・検索の応答性確保（U5 / NFR-03）。加法的インデックス。
+  @@index([status])
+  @@index([surveyType])
+  @@index([createdBy])
+  @@index([createdAt])
 }
 
 // 第1次入力データ実体（surveyType=first）。計算規則は U3a。部位/階按分は当面 Json（正準化は U3c）。
 model FirstSurvey {
-  surveyId           String  @id
-  survey             Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId           String @id
+  survey             Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   externalForceFlags Json
   tiltRatio          Float?
   inundationDepthCm  Float?
@@ -81,8 +88,27 @@ model FirstSurvey {
 
 // 第2次入力データ実体（surveyType=second）。計算規則は U3b。
 model SecondSurvey {
-  surveyId           String  @id
-  survey             Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId           String @id
+  survey             Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   partDamages        Json
   floorApportionment Json?
+}
+
+// 調査写真（U4）。バイナリは S3、DB はメタ＋S3キー＋アップロード状態（status=pending|uploaded）。
+// 調査・部位・ステップに紐付く（Q-U4-3=C）。enum は String カラム＋アプリ層 zod 検証。
+model Photo {
+  id          String    @id
+  surveyId    String
+  survey      Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  part        String?
+  step        String?
+  fileName    String
+  contentType String
+  s3Key       String
+  status      String
+  createdBy   String
+  createdAt   DateTime
+  uploadedAt  DateTime?
+
+  @@index([surveyId])
 }

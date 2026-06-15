@@ -1,5 +1,12 @@
-import { STRUCTURE_TYPE_LIST, SURVEY_TYPE_LIST } from 'common/constants';
+import {
+  DAMAGE_LEVEL_LIST,
+  MAX_PAGE_SIZE,
+  STRUCTURE_TYPE_LIST,
+  SURVEY_STATUS_LIST,
+  SURVEY_TYPE_LIST,
+} from 'common/constants';
 import { boundedString, numberInRange, percentage } from 'common/validators/common';
+import { photoMeta } from 'common/validators/photo';
 import { z } from 'zod';
 import { brandedId } from './brandedId';
 
@@ -52,9 +59,7 @@ const submissionObject = z.object({
       floorApportionment: z.array(floorRatio).optional(),
     })
     .optional(),
-  photos: z
-    .array(z.object({ fileName: boundedString().min(1), contentType: boundedString().min(1) }))
-    .optional(),
+  photos: z.array(photoMeta).optional(),
 });
 
 type SubmissionInput = z.infer<typeof submissionObject>;
@@ -103,6 +108,35 @@ const refineFloorSum = (
   }
 };
 
+// 一覧・検索フィルタの zod 形状（U5 / Q-U5-3=B）。query 文字列由来のため数値は coerce。
+// frourio の validator 型（出力型＝Methods.query 型）に合わせ transform/default は使わない。
+// confirmedOnly は 'true'/'false' 文字列のまま受け、boolean 変換は controller で行う。
+const surveyFilterShape = {
+  status: z.enum(SURVEY_STATUS_LIST).optional(),
+  surveyType: surveyTypeValidator.optional(),
+  structureType: structureTypeValidator.optional(),
+  address: boundedString().min(1).optional(),
+  damageLevel: z.enum(DAMAGE_LEVEL_LIST).optional(),
+  createdBy: brandedId.user.dto.optional(),
+  confirmedOnly: z.enum(['true', 'false']).optional(),
+  createdFrom: z.coerce.number().int().nonnegative().optional(),
+  createdTo: z.coerce.number().int().nonnegative().optional(),
+};
+
+// createdFrom ≤ createdTo を検証（BR-U5-7）。両方指定時のみ。
+const refineDateRange = (
+  val: { createdFrom?: number; createdTo?: number },
+  ctx: z.RefinementCtx,
+): void => {
+  if (val.createdFrom !== undefined && val.createdTo !== undefined && val.createdFrom > val.createdTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'createdFrom は createdTo 以下である必要があります',
+      path: ['createdFrom'],
+    });
+  }
+};
+
 export const surveyValidator = {
   // 提出時一括同期ペイロード（US-207）。区分排他・親 ID は superRefine（BR-3/21）。
   submissionBody: submissionObject.superRefine((val, ctx) => {
@@ -115,4 +149,21 @@ export const surveyValidator = {
 
   // 正式判定（US-606）。採用する Survey の ID。
   chooseOfficialBody: z.object({ officialSurveyId: brandedId.survey.dto }),
+
+  // 一覧・検索クエリ（U5 / US-703 / Q-U5-3=B・Q-U5-4=A）。query は文字列由来のため coerce。
+  // page/pageSize は optional（既定値は controller で適用）。createdFrom ≤ createdTo を検証（BR-U5-7）。
+  listQuery: z
+    .object({
+      ...surveyFilterShape,
+      page: z.coerce.number().int().min(1).optional(),
+      pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    })
+    .superRefine(refineDateRange),
+
+  // CSV エクスポートのフィルタ（U5 / US-702）。ページングなし（全件）。
+  csvQuery: z.object(surveyFilterShape).superRefine(refineDateRange),
 };
+
+// frourio Methods 用のクエリ型（validator 出力型）。confirmedOnly は文字列・page/pageSize は任意。
+export type SurveyListQuery = z.infer<typeof surveyValidator.listQuery>;
+export type SurveyCsvQuery = z.infer<typeof surveyValidator.csvQuery>;

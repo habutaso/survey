@@ -1,9 +1,12 @@
 import type { DefineMethods } from 'aspida';
-import type { SurveyDto } from 'common/types/survey';
+import type { SurveyListResult } from 'common/types/survey';
+import type { SurveyListQuery } from 'common/validators/survey';
 
-// 調査一覧（認証者は全件読取, Q19=A / PII 除外）。本格検索/ページングは U5。
+// 調査一覧・検索（U5 / US-703）。フィルタ＋オフセットページング。ロールスコープ（Q-U5-5=B）。
+// 応答は SurveyListResult（items は PII 除外＋総件数）。
 export type Methods = DefineMethods<{
   get: {
-    resBody: SurveyDto[];
+    query: SurveyListQuery;
+    resBody: SurveyListResult;
   };
 }>;

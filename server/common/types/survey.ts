@@ -1,5 +1,6 @@
 import type { SURVEY_STATUS_LIST, SURVEY_TYPE_LIST, STRUCTURE_TYPE_LIST } from 'common/constants';
 import type { DtoId } from './brandedId';
+import type { PhotoMeta, PhotoUploadTicket } from './photo';
 
 // enum 型。値の真実の源は common/constants の各リスト（U2 / FR-04・FR-06・Q11=A）。
 export type SurveyType = (typeof SURVEY_TYPE_LIST)[number];
@@ -101,12 +102,6 @@ export type SurveyDto = SurveyCommon & { id: DtoId['survey'] };
 // 詳細用 DTO（PII 含む, 調査員/管理者のみ）。
 export type SurveyDetailDto = SurveyBase & { id: DtoId['survey'] };
 
-// 画像メタ（実体保存は photoPort=U4。U2 は素通し）。
-export type PhotoMeta = {
-  fileName: string;
-  contentType: string;
-};
-
 // 提出時一括同期ペイロード（US-207 / FR-18・19）。クライアントが IndexedDB から一括送信。
 export type SubmissionPayload = {
   survey: {
@@ -141,4 +136,34 @@ export type SubmissionPayload = {
 export type HouseResultsDto = {
   first: SurveyDto;
   seconds: SurveyDto[];
+};
+
+// 提出応答（US-207 / U4）。詳細 DTO に加え、写真の presigned PUT URL チケットを同梱。
+// クライアントは putUrl へ画像バイナリを直接アップロードし、その後 confirm API で確定する。
+export type SubmissionResultDto = SurveyDetailDto & {
+  photoUploadTickets: PhotoUploadTicket[];
+};
+
+// 一覧・検索フィルタ（U5 / US-703 / Q-U5-3=B）。すべて任意・AND 結合。
+export type SurveyListFilter = {
+  status?: SurveyStatus;
+  surveyType?: SurveyType;
+  structureType?: StructureType;
+  address?: string; // 部分一致（contains, 大文字小文字無視）
+  damageLevel?: string; // DAMAGE_LEVEL_LIST 検証
+  createdBy?: DtoId['user']; // 実施者
+  confirmedOnly?: boolean; // status=confirmed 限定の簡易フラグ
+  createdFrom?: number; // epoch ms（作成日時 下限・包含）
+  createdTo?: number; // epoch ms（作成日時 上限・包含）
+};
+
+// オフセットページング（U5 / Q-U5-4=A）。page≥1, 1≤pageSize≤100。
+export type Pagination = { page: number; pageSize: number };
+
+// 一覧応答（総件数同梱）。items は PII 除外（BR-13 踏襲 / BR-U5-5）。
+export type SurveyListResult = {
+  items: SurveyDto[];
+  total: number;
+  page: number;
+  pageSize: number;
 };

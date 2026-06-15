@@ -3,7 +3,7 @@ export const APP_NAME = 'CATAPULT';
 // ドメイン ID 名の一覧。新ドメインを追加するユニットがここへ ID 名を追記する
 // （例: U2 で 'survey', 'firstSurvey', 'secondSurvey' / U4 で 'photo' など）。
 // ID 値は ULID（`ulid` パッケージ）で採番し、brandedId が本リストを駆動して型/バリデータを自動生成する。
-export const ID_NAME_LIST = ['user', 'auditLog', 'survey'] as const;
+export const ID_NAME_LIST = ['user', 'auditLog', 'survey', 'photo'] as const;
 
 export const IS_PROD = process.env.NODE_ENV === 'production';
 
@@ -37,6 +37,9 @@ export const AUDIT_ACTION_LIST = [
   'survey.confirm',
   'survey.reject',
   'survey.officialJudgment',
+  'photo.uploadConfirmed',
+  'export.pdf',
+  'export.csv',
   'pii.change',
 ] as const;
 
@@ -101,3 +104,14 @@ export const DAMAGE_LEVEL_DISPLAY: Record<(typeof DAMAGE_LEVEL_LIST)[number], st
   quasiHalf: '準半壊',
   partial: '準半壊に至らない（一部損壊）',
 };
+
+
+// 写真アップロード状態（U4 / Q-U4-4=B）。pending=登録のみ、uploaded=アップロード確認済（閲覧可）。
+// DB は String カラムで保持し、アプリ層で本リスト（zod/TS union）により検証する。
+export const PHOTO_STATUS_LIST = ['pending', 'uploaded'] as const;
+
+export const PHOTO_STATUS_NAMES = listToDict(PHOTO_STATUS_LIST);
+
+// 一覧・検索のページング既定（U5 / Q-U5-4=A / NFR-03）。pageSize 上限で過大取得を防止。
+export const DEFAULT_PAGE_SIZE = 20;
+export const MAX_PAGE_SIZE = 100;

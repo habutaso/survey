@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import path from 'path';
 import { z } from 'zod';
 
 config({ path: '../client/.env' });
@@ -38,6 +39,13 @@ const INITIAL_ADMIN_IDENTIFIERS = z
   .map((identifier) => identifier.trim())
   .filter((identifier) => identifier.length > 0);
 
+// 同梱日本語フォントのパス（U5 / Q-U5-11=A）。未指定時は server/assets/fonts/ipaexg.ttf。
+// cwd=server（npm start / vitest とも server ディレクトリ）。デプロイ環境差異は本 env で上書き可能。
+const PDF_FONT_PATH = z
+  .string()
+  .default(path.join(process.cwd(), 'assets', 'fonts', 'ipaexg.ttf'))
+  .parse(process.env.PDF_FONT_PATH);
+
 export {
   API_BASE_PATH,
   COGNITO_ACCESS_KEY,
@@ -47,6 +55,7 @@ export {
   COGNITO_USER_POOL_CLIENT_ID,
   COGNITO_USER_POOL_ID,
   INITIAL_ADMIN_IDENTIFIERS,
+  PDF_FONT_PATH,
   S3_ACCESS_KEY,
   S3_BUCKET,
   S3_ENDPOINT,

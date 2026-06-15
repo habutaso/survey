@@ -29,4 +29,35 @@ describe('surveyPolicy', () => {
     expect(masked.victimContact).toBeNull();
     expect(masked.victimAddress).toBeNull();
   });
+
+  test('assertExporter: admin 通過・他は拒否（U5 / BR-U5-2/3）', () => {
+    expect(() => surveyPolicy.assertExporter(makeUser(['admin']))).not.toThrow();
+    expect(() => surveyPolicy.assertExporter(makeUser(['surveyor']))).toThrow(ForbiddenError);
+    expect(() => surveyPolicy.assertExporter(makeUser(['viewer']))).toThrow(ForbiddenError);
+  });
+
+  test('scopeForList: 無ロールは ForbiddenError', () => {
+    expect(() => surveyPolicy.scopeForList(makeUser([]), {})).toThrow(ForbiddenError);
+  });
+
+  test('scopeForList: admin は filter 不変（全件）', () => {
+    expect(surveyPolicy.scopeForList(makeUser(['admin'], 'admin-1'), { status: 'submitted' })).toEqual({
+      status: 'submitted',
+    });
+  });
+
+  test('scopeForList: viewer は filter 不変（全件）', () => {
+    expect(surveyPolicy.scopeForList(makeUser(['viewer'], 'viewer-1'), {})).toEqual({});
+  });
+
+  test('scopeForList: surveyor は createdBy を自分に強制上書き（他者指定を無視）', () => {
+    const surveyor = makeUser(['surveyor'], 'surveyor-1');
+    const scoped = surveyPolicy.scopeForList(surveyor, { createdBy: makeUser([], 'other').id });
+
+    expect(scoped.createdBy).toBe(surveyor.id);
+  });
+
+  test('scopeForList: admin かつ surveyor は admin 扱い（createdBy 上書きしない）', () => {
+    expect(surveyPolicy.scopeForList(makeUser(['surveyor', 'admin'], 'both-1'), {}).createdBy).toBeUndefined();
+  });
 });

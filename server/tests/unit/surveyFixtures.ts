@@ -56,7 +56,7 @@ export const firstPayload = (id: string): SubmissionPayload => ({
       { floor: 2, ratio: 40 },
     ],
   },
-  photos: [{ fileName: 'p.jpg', contentType: 'image/jpeg' }],
+  photos: [{ fileName: 'p.jpg', contentType: 'image/jpeg', part: null, step: null }],
 });
 
 export const minimalFirstPayload = (id: string): SubmissionPayload => ({

@@ -31,10 +31,20 @@ export const s3Client = new S3Client({
 
 export const s3 = {
   keyToUrl: (key: string): string => `${S3_PUBLIC_ENDPOINT}/${key}`,
-  getSignedUrl: async (key: string): Promise<string> => {
+  getSignedUrl: async (key: string, expiresIn: number = 24 * 60 * 60): Promise<string> => {
     const command = new GetObjectCommand({ Bucket: S3_BUCKET, Key: key });
 
-    return await getSignedUrl(s3Client, command, { expiresIn: 24 * 60 * 60 });
+    return await getSignedUrl(s3Client, command, { expiresIn });
+  },
+  // 署名付き PUT URL（U4 / BR-P3）。クライアント直アップロード用。既定 15 分（短命）。
+  putSignedUrl: async (
+    key: string,
+    contentType: string,
+    expiresIn: number = 15 * 60,
+  ): Promise<string> => {
+    const command = new PutObjectCommand({ Bucket: S3_BUCKET, Key: key, ContentType: contentType });
+
+    return await getSignedUrl(s3Client, command, { expiresIn });
   },
   health: async (): Promise<boolean> => {
     const command = new ListObjectsV2Command({ Bucket: S3_BUCKET });
@@ -47,6 +57,17 @@ export const s3 = {
       ContentType: params.data.mimetype,
       Key: params.key,
       Body: await params.data.toBuffer(),
+    });
+
+    await s3Client.send(command);
+  },
+  // サーバ生成物（PDF/CSV 等）を Buffer で保存（U5 / Q-U5-8=B）。
+  putBuffer: async (key: string, body: Buffer, contentType: string): Promise<void> => {
+    const command = new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
     });
 
     await s3Client.send(command);
