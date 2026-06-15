@@ -1,16 +1,26 @@
+import type { SecondAssessmentInput } from 'common/types/assessment';
 import type { DtoId } from 'common/types/brandedId';
-import type { FirstSurveyData, SecondSurveyData } from 'common/types/survey';
+import type { FirstSurveyData } from 'common/types/survey';
 import { ValidationError } from 'service/customAssert';
 import type { SurveyEntity } from './surveyType';
 
 // 区分ディスパッチ（純粋）。エンティティから算出入力・親 ID を安全に取り出す。
 export const surveyDispatch = {
   // 区分別の判定入力（INV-4 / fail closed）。区分従属データ未設定は不正。
+  // 第2次は structureType（SurveyCommon）を second データへ合成し SecondAssessmentInput を構成（U3b）。
   assessmentInput: (
     entity: SurveyEntity,
-  ): { first: FirstSurveyData } | { second: SecondSurveyData } => {
+  ): { first: FirstSurveyData } | { second: SecondAssessmentInput } => {
     if (entity.first !== null) return { first: entity.first };
-    if (entity.second !== null) return { second: entity.second };
+    if (entity.second !== null) {
+      return {
+        second: {
+          structureType: entity.structureType,
+          partDamages: entity.second.partDamages,
+          floorApportionment: entity.second.floorApportionment,
+        },
+      };
+    }
     throw new ValidationError('調査区分の入力がありません');
   },
 

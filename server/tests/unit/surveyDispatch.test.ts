@@ -13,8 +13,14 @@ describe('surveyDispatch.assessmentInput', () => {
     expect('first' in surveyDispatch.assessmentInput(firstEntity)).toBe(true);
   });
 
-  test('second → { second }', () => {
-    expect('second' in surveyDispatch.assessmentInput(secondEntity)).toBe(true);
+  test('second → { second } に structureType を合成（SecondAssessmentInput, U3b）', () => {
+    const input = surveyDispatch.assessmentInput(secondEntity);
+    expect('second' in input).toBe(true);
+    if ('second' in input) {
+      expect(input.second.structureType).toBe(secondEntity.structureType);
+      expect(input.second.partDamages).toEqual(secondEntity.second?.partDamages);
+      expect(input.second.floorApportionment).toEqual(secondEntity.second?.floorApportionment);
+    }
   });
 
   test('両区分 null は ValidationError（INV-4 / fail closed）', () => {

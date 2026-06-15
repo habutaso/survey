@@ -542,3 +542,21 @@
 **Context**: CONSTRUCTION → U3a Code Generation Part 2 承認。次は U3b。
 
 ---
+
+
+## U3b Code Generation (Part 1 Planning + Part 2 Generation)
+**Timestamp**: 2026-06-15T09:07:11+09:00
+**User Input**: "A"（U3b へ進む承認） / "A"（Part 1 計画承認）
+**AI Response**: U3b Code Generation を実施。Part 1: 計画作成（`U3b-code-generation-plan.md`、structureType を純粋ディスパッチ層で合成する方針）をユーザー承認。Part 2: `surveyDispatch.assessmentInput` second 分岐で structureType を合成し SecondAssessmentInput を構成、`assessmentPort.calcSecond` を computeSecondAssessment へバインド（呼出点不変）。テスト2本を更新（surveyDispatch unit + surveys API 第2次実値検証）。検証: tsc PASS / npm test 20ファイル157テスト PASS / coverage All files 100% / eslint クリーン / Prisma 変更なし（prisma format の整形は revert）。Summary: `aidlc-docs/construction/U3b/code/u3b-summary.md`。
+**Context**: CONSTRUCTION → U3b Code Generation Part 2 完了、承認待ち。
+
+---
+
+
+## U3b Code Generation - Approval & Commit
+**Timestamp**: 2026-06-15T09:11:46+09:00
+**User Input**: "B"（U3b 承認＋コミット）
+**AI Response**: U3b を COMPLETE & APPROVED として記録し、git コミットを実施。次は U4（photoPort S3 保存実装注入）。
+**Context**: CONSTRUCTION → U3b Code Generation Part 2 承認。
+
+---

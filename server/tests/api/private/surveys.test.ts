@@ -3,6 +3,7 @@ import type { DtoId } from 'common/types/brandedId';
 import type { SubmissionPayload } from 'common/types/survey';
 import { brandedId } from 'common/validators/brandedId';
 import { computeFirstAssessment } from 'domain/assessment/computeFirstAssessment';
+import { computeSecondAssessment } from 'domain/assessment/computeSecondAssessment';
 import { prismaClient } from 'service/prismaClient';
 import { ulid } from 'ulid';
 import { expect, test } from 'vitest';
@@ -245,6 +246,15 @@ test('第2次提出（親確定済み）・結果併記・正式判定（admin, 
 
   expect(second.status).toBe(200);
   expect(second.body.parentSurveyId).toBe(firstId);
+
+  // 第2次判定が本実装 computeSecondAssessment に配線されていることを実値で検証（U3b / FR-23）。
+  const expectedSecond = computeSecondAssessment({
+    structureType: 'wood',
+    partDamages: [{ part: 'roof', damageRatio: 30 }],
+    floorApportionment: [{ floor: 1, ratio: 100 }],
+  });
+  expect(second.body.damageRatio).toBe(expectedSecond.damageRatio);
+  expect(second.body.damageLevel).toBe(expectedSecond.damageLevel);
 
   await admin.client.private.surveys._surveyId(secondId).approve.post();
   await admin.client.private.surveys._surveyId(secondId).confirm.post();
