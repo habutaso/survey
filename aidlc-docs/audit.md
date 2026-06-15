@@ -672,3 +672,9 @@
 **User Input**: "A"（Continue to Next Stage — U5 承認、U6f へ）
 **AI Response**: U5 Code Generation を承認として記録。構築順序に従い次ユニット U6f（ローカルファースト基盤: IndexedDB＋同期）の per-unit ループを開始。クライアント構成を調査し Functional Design 要否を判断する。
 **Context**: CONSTRUCTION → U5 完了承認、U6f 着手。
+
+## Git Commit (U4 + U5)
+**Timestamp**: 2026-06-15T22:44:00+09:00
+**User Input**: "git コミットも実施してください"
+**AI Response**: U4/U5 の変更を main にコミット（push なし）。共有ファイルで U4/U5 が交錯するため独立ビルド可能な per-unit 分割は不可と判断し、コード1コミット＋ドキュメント1コミットに分割。(1) 38428da feat(survey): U4 画像管理(S3 presigned) + U5 結果出力・一覧(PDF/CSV/検索)。(2) 1ccbd74 docs(aidlc): U4/U5 成果物 + U6f 機能設計プラン、state/audit 更新。検証は統合状態で済（tsc PASS / 201 テスト PASS / eslint クリーン）。working tree クリーン。
+**Context**: CONSTRUCTION - U4/U5 コミット完了。U6f は Functional Design の質問回答待ち。
