@@ -1,0 +1,43 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "3. クライアント: ローカルファースト基盤 (U6f)",
+  "description": "オフラインでも入力できるローカルファースト基盤を読みます。IndexedDB 暗号化 → 下書き保存 → 提出時の3段同期 → 成功後消去、という流れを headless（UI非依存）の層で辿ります。",
+  "steps": [
+    {
+      "file": "client/features/localFirst/index.ts",
+      "line": 1,
+      "title": "公開インターフェイス",
+      "description": "この基盤の入口。UI(U6u) が使うのは主にここから export される **フック** です。\n\n- `useLocalDraft` … 下書きの作成/自動保存/写真添付\n- `useDraftList` … 下書き一覧（再開）\n- `useSyncOnSubmit` … 提出・同期状態\n- `useNetworkStatus` … オンライン/オフライン\n\n内部は model / crypto / store / service に分かれています。"
+    },
+    {
+      "file": "client/features/localFirst/types.ts",
+      "pattern": "export type LocalDraft",
+      "title": "① ドメイン型",
+      "description": "ローカルに持つデータの形。`LocalDraft`（入力＋進捗）、`LocalPhoto`（画像）、`SyncJob`（提出キュー要素）が中心です。\n\nサーバの `SubmissionPayload`（ツアー2 ①）へ変換可能な「素材」を保持します。"
+    },
+    {
+      "file": "client/features/localFirst/crypto/draftCrypto.ts",
+      "pattern": "export const deriveKey",
+      "title": "② 暗号（Web Crypto / AES-GCM）",
+      "description": "被災者PII・画像・入力は **AES-GCM 256・レコード毎ランダムIV** で暗号化します（SECURITY-01）。\n\n鍵はセッションから導出（`sessionKeyProvider`）し、**メモリのみ・非永続**。再読込中は再導出でき、ログアウトで導出不能＝実質消去、という両立がポイントです。"
+    },
+    {
+      "file": "client/features/localFirst/store/localDraftStore.ts",
+      "pattern": "export const createLocalDraftStore",
+      "title": "③ ストア（IndexedDB / idb）",
+      "description": "`idb` 薄ラッパで `drafts`/`photos`/`syncQueue`/`meta` を CRUD。\n\n保存時は暗号封筒に封入（`store/codec.ts`）、PIIは常に暗号化、検索用メタのみ平文。鍵未取得時は `LockedError` で機微操作を拒否します（fail safe）。"
+    },
+    {
+      "file": "client/features/localFirst/service/syncService.ts",
+      "pattern": "export const createSyncService",
+      "title": "④ 同期サービス（3段オーケストレーション）",
+      "description": "提出時の中核。**submission → presigned PUT(写真) → confirm** を冪等・段階再開で実行し、失敗時は指数バックオフで再試行、**全段成功後にのみ** ローカルPII/画像を消去します（FR-19）。\n\n副作用（API/PUT/store）は注入されるため、純粋にテスト可能（カバレッジ100%）。各段の実装は `service/stages.ts`。"
+    },
+    {
+      "file": "client/features/localFirst/hooks/useSyncOnSubmit.ts",
+      "pattern": "export const useSyncOnSubmit",
+      "title": "⑤ フック（UIとの境界）",
+      "description": "UI はこのフックの `submit` / `retry` / `syncing` を使うだけ。暗号・永続化・同期の詳細は意識しません。\n\nここまでが U6f。次のツアーで、この基盤を使う画面 UI(U6u) を読みます。"
+    }
+  ]
+}

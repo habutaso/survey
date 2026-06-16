@@ -1,0 +1,43 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "4. クライアント: 調査ウィザード UI (U6u)",
+  "description": "ローカルファースト基盤(U6f)の上に乗る画面ジャーニー。ステップ機械 → ウィザード → ルート（新規/一覧/結果）の順に読みます。",
+  "steps": [
+    {
+      "file": "client/features/survey/model/wizardSteps.ts",
+      "pattern": "export const stepsFor",
+      "title": "① ステップ機械（純粋ロジック）",
+      "description": "ウィザードの中核ロジック。`stepsFor` が surveyType と階数からステップ列を導出（単層は階按分をスキップ）、`isStepComplete`/`canNavigate` で進捗とナビゲーション可否を判定します。\n\nUI と切り離した純粋関数なので Vitest+PBT でカバレッジ100%（`features/survey/model/`）。"
+    },
+    {
+      "file": "client/features/survey/components/SurveyWizard.tsx",
+      "pattern": "export const SurveyWizard",
+      "title": "② ウィザード本体",
+      "description": "`useLocalDraft`(U6f) で下書きを読み書きし、`wizardSteps`(①) で現在ステップ・遷移を制御します。\n\n各入力ステップ（`components/steps/*`）は `update()` でローカル自動保存し、確認ステップで `useSyncOnSubmit.submit`(U6f④) を呼びます。表示と状態管理に専念し、計算・暗号は持ちません。"
+    },
+    {
+      "file": "client/features/survey/components/steps/FirstInputStep.tsx",
+      "pattern": "export const FirstInputStep",
+      "title": "②' 入力ステップの例",
+      "description": "ステップ群は同じ形（`{ draft, update }` を受け取り、入力変更を `update` で保存）。これは第1次調査の入力例です。\n\n他に House/Victim/SecondInput/Photos/Floors/Review があり、`formKit.tsx` の小さな入力部品を共有します。"
+    },
+    {
+      "file": "client/app/surveys/new/page.tsx",
+      "pattern": "export default function NewSurveyPage",
+      "title": "③ ルート: 新規/再開",
+      "description": "`/surveys/new` ルート。新規作成、`?draftId=` での再開、`?type=second&parentId=` での第2次開始を担い、`SurveyWizard` を表示します。\n\n認証ゲートは共通の `PageLayout` が担当します。"
+    },
+    {
+      "file": "client/features/survey/components/SurveyList.tsx",
+      "pattern": "export const SurveyList",
+      "title": "④ 一覧・検索",
+      "description": "`apiClient.private.surveys.$get`(U5) でフィルタ＋ページング表示し、`useDraftList`(U6f) でローカル下書きの「再開」も提示します。トップページ `app/page.tsx` から表示されます。"
+    },
+    {
+      "file": "client/features/survey/components/HouseResults.tsx",
+      "pattern": "export const HouseResults",
+      "title": "⑤ 結果・管理操作",
+      "description": "`/surveys/[surveyId]` で表示。第1次/第2次の結果併記、admin の承認/確定/正式判定、PDF/CSV 出力、第2次開始を提供します。\n\n認可は **UI 表示の出し分け + サーバ最終判定**（多層）。これで client→server の一巡が読み終わりです。"
+    }
+  ]
+}

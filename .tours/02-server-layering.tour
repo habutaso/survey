@@ -1,0 +1,49 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "2. サーバのレイヤリング（提出フロー）",
+  "description": "1件の「調査提出」リクエストを入口から永続化まで追い、controller → useCase → model → store の DDD レイヤリングと velona による依存性注入を理解します。",
+  "steps": [
+    {
+      "file": "server/common/types/survey.ts",
+      "pattern": "export type SubmissionPayload",
+      "title": "① 契約（型）",
+      "description": "まず **クライアント⇔サーバで共有する契約** を見ます。`SubmissionPayload` が提出時にクライアントから送られる入力です。\n\n`common/` 配下の型・バリデータは client/server 双方から参照されます（client 側はシンボリックリンク）。読む際は常に「型 = 契約」を起点にすると理解が早いです。"
+    },
+    {
+      "file": "server/api/private/surveys/submission/controller.ts",
+      "pattern": "surveyUseCase.ingestSubmission",
+      "title": "② controller（入力検証 + L1認可）",
+      "description": "**第1層: controller**。\n\n- `validators.body` で zod 検証（SECURITY-05）\n- `authMethod.assertRole` で **L1 認可**（提出者ロールの強制・多層防御）\n- 検証済み入力を UseCase に委譲\n\nルーティング・HTTP の関心はここで完結し、業務ロジックは持ちません。"
+    },
+    {
+      "file": "server/domain/survey/surveyUseCase.ts",
+      "pattern": "ingestSubmission: depend",
+      "title": "③ useCase（ユースケース + DI）",
+      "description": "**第2層: useCase**。トランザクション・監査記録・ポート呼出をオーケストレーションします。\n\n`depend({ assessmentPort, photoPort })` が **velona による依存性注入**。判定計算(U3)や写真保存(U4)は「ポート」越しに呼ばれ、テスト時はスタブへ差し替え可能です（呼出点は不変）。"
+    },
+    {
+      "file": "server/domain/survey/surveyUseCase.ts",
+      "pattern": "const base = surveyMethod.createFromSubmission",
+      "title": "③' 純粋ロジックへの委譲",
+      "description": "useCase は副作用（DB・時刻・外部 I/O）を担当しつつ、**判断ロジックは純粋な model に委譲** します。ここで `surveyMethod.createFromSubmission` を呼んでエンティティを組み立てています。"
+    },
+    {
+      "file": "server/domain/survey/model/surveyMethod.ts",
+      "pattern": "createFromSubmission:",
+      "title": "④ model（純粋ドメインロジック / L2認可）",
+      "description": "**第3層: model**。副作用を持たない純粋関数群で、ビジネスルール・状態遷移・**L2（オブジェクト）認可** を表現します。\n\n純粋なので Vitest + fast-check（PBT）でカバレッジ100%を担保しやすいのが設計の狙いです。"
+    },
+    {
+      "file": "server/domain/survey/store/surveyCommand.ts",
+      "pattern": "upsert: async",
+      "title": "⑤ store（永続化 / Prisma）",
+      "description": "**第4層: store**。Prisma によるDB入出力と DTO 変換だけを担います。`upsert` は同一 ULID の再送を冪等に扱います（ローカルファースト同期と整合）。\n\nここまでで controller→useCase→model→store の一巡が掴めます。他ドメイン（user / audit / photo / export）も同じ構造です。"
+    },
+    {
+      "file": "server/domain/survey/ports/assessmentPort.ts",
+      "pattern": "呼出点",
+      "title": "補足: ポート（副作用の隔離）",
+      "description": "判定計算・S3・PDF などの副作用は **port（velona）** に隔離されます。`surveyUseCase` はポート契約だけに依存し、実装（U3a/U3b/U4 等）は注入で差し替わります。\n\nこの「純粋な中心 + 注入された周辺」が本リポジトリの一貫した設計指針です。"
+    }
+  ]
+}

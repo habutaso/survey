@@ -1,0 +1,38 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "1. 全体像と読む順番",
+  "description": "初めてこのリポジトリを読む人向けの導入ツアー。モノレポ構成・型安全な契約・推奨リーディング順を把握します。",
+  "isPrimary": true,
+  "steps": [
+    {
+      "file": "README.md",
+      "line": 1,
+      "title": "はじめに",
+      "description": "## ようこそ\n\nこのプロジェクトは **Next.js(client) + Fastify(server)** の FullStack TypeScript モノレポです。\n\n### 推奨リーディング順（CodeTour）\n1. **全体像と読む順番**（このツアー）\n2. **サーバのレイヤリング**（提出フローで DDD を一気に理解）\n3. **クライアント: ローカルファースト基盤 (U6f)**（暗号化・オフライン同期）\n4. **クライアント: 調査ウィザード UI (U6u)**（画面ジャーニー）\n\n左の CodeTour パネルから順に辿ってください。"
+    },
+    {
+      "file": "package.json",
+      "pattern": "run-p dev",
+      "title": "モノレポの統括",
+      "description": "ルートの `package.json` は **3つの package.json（root / client / server）** を `run-p`/`run-s` で束ねます。\n\n- `npm run dev` / `npm run notios` … client・server を同時起動\n- `npm run generate` … Prisma + frourio(`$server`) + aspida(`$api`) + pathpida(`$path`) を生成\n- `npm test` / `npm run typecheck` / `npm run lint`"
+    },
+    {
+      "file": "client/utils/apiClient.ts",
+      "pattern": "export const apiClient",
+      "title": "型安全な API クライアント（aspida）",
+      "description": "クライアントはここで作る `apiClient` 経由でサーバを呼びます。\n\n`client/api`・`client/common` は **`server` へのシンボリックリンク**で、aspida がサーバの型定義からクライアントを生成します。これにより **エンドポイントの整合がコンパイル時に保証** されます（読む側はサーバの型を見れば API がわかります）。"
+    },
+    {
+      "file": "client/app/layout.tsx",
+      "pattern": "export default function RootLayout",
+      "title": "クライアントのエントリ（App Router）",
+      "description": "Next.js App Router のルートレイアウト。Amplify(Cognito) の設定・認証ローダ（`AuthLoader`）をここで初期化します。\n\n画面は `client/app/**/page.tsx`、機能は `client/features/**` に置かれます。"
+    },
+    {
+      "file": "server/api/private/surveys/submission/index.ts",
+      "pattern": "export type Methods",
+      "title": "サーバのエントリ（frourio）",
+      "description": "サーバの API は `server/api/**` のディレクトリ構造がそのまま URL になります（frourio）。\n\n各エンドポイントは `index.ts` で **入出力の型（Methods）** を宣言し、`controller.ts` で実装します。次のツアーで、この提出エンドポイントを起点に DDD のレイヤリングを辿ります。"
+    }
+  ]
+}

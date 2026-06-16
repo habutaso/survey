@@ -1,161 +1,130 @@
-# C A T A P U L T
+# CATAPULT
 
-aspida と frourio を用いた FullStack TypeScript テンプレート
+aspida + frourio による FullStack TypeScript モノレポ。
 
-- Frontend: Next.js
-- Backend: Fastify
-- ORM: Prisma + PostgreSQL
-- Auth: AWS Cognito
-- Object Storage: AWS S3 or Cloudflare R2
-- RESTではないHTTPリクエスト
-- 関数型アーキテクチャ
-- 全ての関数に依存性注入が可能
+## コードを読む（Code Tour）
+
+初めて読む人向けに、理解しやすい順番のガイド付きツアーを `.tours/` に用意しています。VS Code 拡張 [CodeTour](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour)（`vsls-contrib.codetour`）をインストールし、サイドバーの **CODE TOURS** から順に辿ってください。
+
+| # | ツアー | 読む内容 |
+|---|---|---|
+| 1 | 全体像と読む順番 | モノレポ構成・型安全な契約・エントリポイント |
+| 2 | サーバのレイヤリング | 提出フローで controller → useCase → model → store（DDD）を一気に理解 |
+| 3 | クライアント: ローカルファースト基盤 (U6f) | IndexedDB 暗号化・オフライン同期 |
+| 4 | クライアント: 調査ウィザード UI (U6u) | 画面ジャーニー（ウィザード・一覧・結果） |
+
+
+## 技術スタック
+
+| 領域 | 採用技術 |
+|---|---|
+| Frontend | Next.js (App Router) / React 18 / jotai / SWR |
+| Backend | Fastify / frourio / aspida（型安全 RPC） |
+| ORM / DB | Prisma + PostgreSQL |
+| 認証 | AWS Cognito（`aws-amplify`） |
+| ストレージ | AWS S3 または Cloudflare R2（presigned URL） |
+| ローカル永続 | IndexedDB（`idb`）＋ Web Crypto（クライアント暗号化） |
+| DI / テスト | velona（依存性注入）/ Vitest / fast-check（PBT） |
+
+- 関数型アーキテクチャ・全関数に依存性注入が可能
 - 3rd Party Cookie なし
-- Docker コンテナー1つだけでデプロイ
 - ローカル開発は Node.js + Docker Compose で完結
-- 最新コミットのデモ: https://catapult.frourio.com
 
-### データ取得時のデータフロー
+## アーキテクチャ
+
+### モノレポ構成
+
+```text
+.
+├── client/   # Next.js（UI・features/・app/）
+├── server/   # Fastify（api/ ・ domain/ ・ service/ ・ prisma/）
+└── package.json（ルート・3つの package.json を run-p/run-s で統括）
+```
+
+`client/common`・`client/api` は `server` 配下へのシンボリックリンク。型・API クライアントを共有し、aspida がエンドポイントの整合をコンパイル時に保証する。
+
+### サーバのレイヤリング（DDD）
+
+```text
+api/{path}/controller.ts   … 入力検証(zod) + L1認可 + ルーティング（frourio）
+        │
+domain/{kind}/xxxUseCase.ts … ユースケース（トランザクション・監査・ポート呼出, velona DI）
+        │
+domain/{kind}/model/*       … 純粋なドメインロジック・ビジネスルール（L2認可）
+        │
+domain/{kind}/store/*       … 永続化（Prisma）/ DTO 変換
+```
+
+副作用（S3・PDF 生成・時刻など）は `service/` と velona のポートに隔離し、ドメインは純粋に保つ。
+
+### データフロー
 
 ```mermaid
 flowchart TB
-  node_1["Next.js"]
-  node_2["GET server/api/{path}/controller.ts"]
-  node_3["server/domain/{kind}/store/xxxQuery.ts"]
-  node_4[("PostgreSQL")]
-  node_1 --"Query"--> node_2
-  node_2 --"Query"--> node_3
-  node_3 --"Prisma"--> node_4
-  node_4 =="data"==> node_3
-  node_3 =="Dto"==> node_2
-  node_2 =="Dto"==> node_1
+  client["Next.js (client)"]
+  controller["controller.ts (api)"]
+  usecase["xxxUseCase.ts (domain)"]
+  store["store / Prisma"]
+  db[("PostgreSQL")]
+  s3[("S3 / R2")]
+  client -- "Query / Body（aspida）" --> controller
+  controller --> usecase
+  usecase --> store
+  store --> db
+  usecase -- "presigned URL" --> s3
+  store == "Dto" ==> usecase ==> controller ==> client
 ```
 
-### データ更新時のデータフロー
+クライアントは入力を IndexedDB（暗号化）に保持し、提出時にサーバへ一括同期する（ローカルファースト）。
 
-```mermaid
-flowchart TB
-  node_1["Next.js"]
-  node_2["POST server/api/{path}/controller.ts"]
-  node_3["server/domain/{kind}/xxxUseCase.ts"]
-  node_4["server/domain/{kind}/model/xxxMethod.ts"]
-  node_5["server/domain/{kind}/store/xxxCommand.ts"]
-  node_6["server/domain/{kind}/store/xxxQuery.ts"]
-  node_7[("PostgreSQL")]
-  node_1 --"Body"--> node_2
-  node_2 --"Body"--> node_3
-  node_4 --"Entity"--> node_5
-  node_3 --"Body"--> node_6
-  node_6 --"Dto"--> node_4
-  node_5 --"Prisma"--> node_7
-  node_5 =="Dto"==> node_3
-  node_7 =="data"==> node_5
-  node_3 =="Dto"==> node_2
-  node_2 =="Dto"==> node_1
-```
+## 起動方法（ローカル開発）
 
-## 開発手順
+### 1. 前提
 
-### Node.js のインストール
+- Node.js **v24 以上**
+- Docker / Docker Compose
 
-https://nodejs.org/en で v20 以上をインストール
-
-### Gitリポジトリのクローン
+### 2. 依存インストール（package.json は3つ）
 
 ```sh
-$ git clone https://github.com/frouriojs/catapult.git
-$ cd catapult
-$ rm -rf .git # 既存のコミット履歴を削除
-$ git init
+npm i
+npm i --prefix client
+npm i --prefix server
 ```
 
-### npm モジュールのインストール
-
-package.json は3つ存在する
+### 3. 環境変数ファイルの作成
 
 ```sh
-$ npm i
-$ npm i --prefix client
-$ npm i --prefix server
+cp client/.env.example client/.env
+cp server/.env.example server/.env
 ```
 
-### 環境変数ファイルの作成
+### 4. ミドルウェア起動（PostgreSQL / Cognito エミュレータ / MinIO / Inbucket）
 
 ```sh
-$ cp client/.env.example client/.env
-$ cp server/.env.example server/.env
+docker compose up -d
 ```
 
-### Docker compose起動
+### 5. 開発サーバ起動
 
 ```sh
-$ docker compose up -d
+npm run notios
 ```
 
-### 開発サーバー起動
+Web ブラウザで http://localhost:3000 を開く（ターミナル表示は [notios](https://github.com/frouriojs/notios) で制御。終了は `Ctrl + C` を2回）。
 
-次回以降は以下のコマンドだけで開発できる
+- 仮想メール（検証コード等）: http://localhost:2501 （Inbucket）
+- MinIO コンソール: http://localhost:9001
+- PostgreSQL UI: `cd server && npx prisma studio`
+
+## よく使うコマンド（ルート）
 
 ```sh
-$ npm run notios
+npm run generate    # Prisma + frourio($server) + aspida($api) + pathpida($path) + hcm
+npm run build       # client(next build) + server(esbuild)
+npm test            # client / server の Vitest（server は Docker 必須）
+npm run typecheck   # tsc（client / server）
+npm run lint        # eslint / stylelint / prettier / prisma format
 ```
 
-Web ブラウザで http://localhost:3000 を開く
-
-開発時のターミナル表示は [notios](https://github.com/frouriojs/notios) で制御している
-
-[Node.js モノレポ開発のターミナルログ混雑解消のための新作 CLI ツール notios](https://zenn.dev/luma/articles/nodejs-new-cli-tool-notios)
-
-閉じるときは `Ctrl + C` を 2 回連続で入力
-
-### ローカルでのアカウント作成方法
-
-Docker の Inbucket に仮想メールが届くため任意のメールアドレスでアカウント作成可能
-
-検証コード含めて開発時のメールは全て http://localhost:2501 のヘッダー中央の「Recent Mailboxes」に届く
-
-## デプロイ
-
-- `Dockerfile` でデプロイ可能
-
-### データベース
-
-`PostgreSQL`
-
-### 外部連携サービス
-
-- AWS Cognito
-- AWS S3 or Cloudflare R2
-
-ヘルスチェック用エンドポイント
-
-`/api/health`
-
-### Dockerfile を用いたデプロイ時の環境変数
-
-```sh
-NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=
-NEXT_PUBLIC_COGNITO_USER_POOL_ID=
-NEXT_PUBLIC_COGNITO_POOL_ENDPOINT=
-COGNITO_ACCESS_KEY=
-COGNITO_SECRET_KEY=
-COGNITO_REGION=
-DATABASE_URL=
-S3_ACCESS_KEY=
-S3_BUCKET=
-S3_ENDPOINT=
-S3_REGION=
-S3_SECRET_KEY=
-PORT= # optional
-```
-
-#### MinIO Console
-
-http://localhost:9001
-
-#### PostgreSQL UI
-
-```sh
-$ cd server
-$ npx prisma studio
-```
+> server のテスト・マイグレーションは Docker Compose（PostgreSQL ほか）が稼働している前提。スキーマ反映は `npm run migrate:deploy --prefix server`。
