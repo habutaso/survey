@@ -103,11 +103,86 @@
         }
       }
     },
-    "/private/tasks/{taskId}": {
-      "patch": {
+    "/private/surveys/{surveyId}/approve": {
+      "post": {
         "parameters": [
           {
-            "name": "taskId",
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/{surveyId}/confirm": {
+      "post": {
+        "parameters": [
+          {
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/{surveyId}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/{surveyId}/official": {
+      "post": {
+        "parameters": [
+          {
+            "name": "surveyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -121,12 +196,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "done": {
-                    "type": "boolean"
+                  "officialSurveyId": {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
                   }
                 },
                 "required": [
-                  "done"
+                  "officialSurveyId"
                 ]
               }
             }
@@ -137,17 +212,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskDto"
+                  "$ref": "#/components/schemas/SurveyDetailDto"
                 }
               }
             }
           }
         }
-      },
-      "delete": {
+      }
+    },
+    "/private/surveys/{surveyId}/pdf": {
+      "get": {
         "parameters": [
           {
-            "name": "taskId",
+            "name": "surveyId",
             "in": "path",
             "required": true,
             "schema": {
@@ -160,7 +237,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskDto"
+                  "type": "object",
+                  "properties": {
+                    "format": {
+                      "$ref": "#/components/schemas/ExportFormat"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "filename": {
+                      "type": "string"
+                    },
+                    "expiresInSec": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "expiresInSec",
+                    "filename",
+                    "format",
+                    "url"
+                  ]
                 }
               }
             }
@@ -168,8 +265,38 @@
         }
       }
     },
-    "/private/tasks/di": {
-      "get": {
+    "/private/surveys/{surveyId}/photos/confirm": {
+      "post": {
+        "parameters": [
+          {
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photoIds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Dto<\"photo\">"
+                    }
+                  }
+                },
+                "required": [
+                  "photoIds"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "2XX": {
             "content": {
@@ -177,7 +304,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TaskDto"
+                    "$ref": "#/components/schemas/PhotoDto"
                   }
                 }
               }
@@ -186,7 +313,105 @@
         }
       }
     },
-    "/private/tasks": {
+    "/private/surveys/{surveyId}/photos": {
+      "get": {
+        "parameters": [
+          {
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "photoId": {
+                        "$ref": "#/components/schemas/Dto<\"photo\">"
+                      },
+                      "getUrl": {
+                        "type": "string"
+                      },
+                      "fileName": {
+                        "type": "string"
+                      },
+                      "part": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "step": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "fileName",
+                      "getUrl",
+                      "part",
+                      "photoId",
+                      "step"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/{surveyId}/results": {
+      "get": {
+        "parameters": [
+          {
+            "name": "surveyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "first": {
+                      "$ref": "#/components/schemas/SurveyDto"
+                    },
+                    "seconds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SurveyDto"
+                      }
+                    }
+                  },
+                  "required": [
+                    "first",
+                    "seconds"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/export/csv": {
       "get": {
         "parameters": [
           {
@@ -200,7 +425,57 @@
             "in": "query",
             "required": false,
             "schema": {
-              "limit": {
+              "address": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "approved",
+                  "confirmed",
+                  "draft",
+                  "submitted"
+                ],
+                "type": "string"
+              },
+              "surveyType": {
+                "enum": [
+                  "first",
+                  "second"
+                ],
+                "type": "string"
+              },
+              "structureType": {
+                "enum": [
+                  "nonWood",
+                  "wood"
+                ],
+                "type": "string"
+              },
+              "damageLevel": {
+                "enum": [
+                  "half",
+                  "largeScaleHalf",
+                  "mediumScaleHalf",
+                  "partial",
+                  "quasiHalf",
+                  "totalCollapse"
+                ],
+                "type": "string"
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              },
+              "confirmedOnly": {
+                "enum": [
+                  "false",
+                  "true"
+                ],
+                "type": "string"
+              },
+              "createdFrom": {
+                "type": "number"
+              },
+              "createdTo": {
                 "type": "number"
               }
             }
@@ -211,28 +486,339 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaskDto"
-                  }
+                  "type": "object",
+                  "properties": {
+                    "format": {
+                      "$ref": "#/components/schemas/ExportFormat"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "filename": {
+                      "type": "string"
+                    },
+                    "expiresInSec": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "expiresInSec",
+                    "filename",
+                    "format",
+                    "url"
+                  ]
                 }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/private/surveys": {
+      "get": {
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "address": {
+                "type": "string"
+              },
+              "page": {
+                "type": "number"
+              },
+              "status": {
+                "enum": [
+                  "approved",
+                  "confirmed",
+                  "draft",
+                  "submitted"
+                ],
+                "type": "string"
+              },
+              "surveyType": {
+                "enum": [
+                  "first",
+                  "second"
+                ],
+                "type": "string"
+              },
+              "structureType": {
+                "enum": [
+                  "nonWood",
+                  "wood"
+                ],
+                "type": "string"
+              },
+              "pageSize": {
+                "type": "number"
+              },
+              "damageLevel": {
+                "enum": [
+                  "half",
+                  "largeScaleHalf",
+                  "mediumScaleHalf",
+                  "partial",
+                  "quasiHalf",
+                  "totalCollapse"
+                ],
+                "type": "string"
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              },
+              "confirmedOnly": {
+                "enum": [
+                  "false",
+                  "true"
+                ],
+                "type": "string"
+              },
+              "createdFrom": {
+                "type": "number"
+              },
+              "createdTo": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "2XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SurveyDto"
+                      }
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "page": {
+                      "type": "number"
+                    },
+                    "pageSize": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/surveys/submission": {
       "post": {
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/{label:string;}"
+                "type": "object",
+                "properties": {
+                  "survey": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "$ref": "#/components/schemas/Dto<\"survey\">"
+                      },
+                      "surveyType": {
+                        "$ref": "#/components/schemas/SurveyType"
+                      },
+                      "parentSurveyId": {
+                        "$ref": "#/components/schemas/Dto<\"survey\">"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "houseNumber": {
+                        "type": "string"
+                      },
+                      "structureType": {
+                        "$ref": "#/components/schemas/StructureType"
+                      },
+                      "buildingName": {
+                        "type": "string"
+                      },
+                      "floors": {
+                        "type": "number"
+                      },
+                      "victimName": {
+                        "type": "string"
+                      },
+                      "victimContact": {
+                        "type": "string"
+                      },
+                      "victimAddress": {
+                        "type": "string"
+                      },
+                      "latitude": {
+                        "type": "number"
+                      },
+                      "longitude": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "houseNumber",
+                      "id",
+                      "structureType",
+                      "surveyType"
+                    ]
                   },
-                  {
-                    "$ref": "#/components/schemas/{image?:File|undefined;}"
+                  "firstSurvey": {
+                    "type": "object",
+                    "properties": {
+                      "externalForceFlags": {
+                        "type": "object",
+                        "properties": {
+                          "houseWashedAway": {
+                            "type": "boolean"
+                          },
+                          "groundScour": {
+                            "type": "boolean"
+                          },
+                          "foundationWashout": {
+                            "type": "boolean"
+                          },
+                          "fullCeilingInundation": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "foundationWashout",
+                          "fullCeilingInundation",
+                          "groundScour",
+                          "houseWashedAway"
+                        ]
+                      },
+                      "tiltRatio": {
+                        "type": "number"
+                      },
+                      "inundationDepthCm": {
+                        "type": "number"
+                      },
+                      "floorApportionment": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "floor": {
+                              "type": "number"
+                            },
+                            "ratio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "floor",
+                            "ratio"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "externalForceFlags"
+                    ]
+                  },
+                  "secondSurvey": {
+                    "type": "object",
+                    "properties": {
+                      "partDamages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "part": {
+                              "type": "string"
+                            },
+                            "damageRatio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "damageRatio",
+                            "part"
+                          ]
+                        }
+                      },
+                      "floorApportionment": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "floor": {
+                              "type": "number"
+                            },
+                            "ratio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "floor",
+                            "ratio"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "partDamages"
+                    ]
+                  },
+                  "photos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "part": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "step": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "contentType",
+                        "fileName",
+                        "part",
+                        "step"
+                      ]
+                    }
                   }
+                },
+                "required": [
+                  "survey"
                 ]
               }
             }
@@ -243,19 +829,47 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskDto"
+                  "$ref": "#/components/schemas/SubmissionResultDto"
                 }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/private/users/{userId}/roles": {
       "patch": {
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/{done:boolean;taskId:Branded<\"maybe\">|Dto<\"task\">;}"
+                "type": "object",
+                "properties": {
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "admin",
+                        "surveyor",
+                        "viewer"
+                      ],
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "roles"
+                ]
               }
             }
           }
@@ -265,29 +879,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaskDto"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/{taskId:Branded<\"maybe\">|Dto<\"task\">;}"
-              }
-            }
-          }
-        },
-        "responses": {
-          "2XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskDto"
+                  "$ref": "#/components/schemas/UserDto"
                 }
               }
             }
@@ -384,6 +976,17 @@
               },
               "photoUrl": {
                 "type": "string"
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "admin",
+                    "surveyor",
+                    "viewer"
+                  ],
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -391,6 +994,7 @@
               "displayName",
               "email",
               "photoUrl",
+              "roles",
               "signInName"
             ]
           },
@@ -418,189 +1022,1316 @@
           }
         ]
       },
-      "TaskDto": {
+      "SurveyDetailDto": {
         "allOf": [
           {
             "type": "object",
             "properties": {
-              "label": {
+              "surveyType": {
+                "$ref": "#/components/schemas/SurveyType"
+              },
+              "parentSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "$ref": "#/components/schemas/SurveyStatus"
+              },
+              "address": {
                 "type": "string"
               },
-              "done": {
-                "type": "boolean"
+              "houseNumber": {
+                "type": "string"
+              },
+              "structureType": {
+                "$ref": "#/components/schemas/StructureType"
+              },
+              "buildingName": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "floors": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "latitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "longitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageRatio": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageLevel": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "assessmentBasis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Json"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
               },
               "createdTime": {
                 "type": "number"
               },
-              "author": {
-                "type": "object",
-                "properties": {
-                  "id": {
+              "submittedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "approvedBy": {
+                "anyOf": [
+                  {
                     "$ref": "#/components/schemas/Dto<\"user\">"
                   },
-                  "signInName": {
-                    "type": "string"
+                  {
+                    "type": "null"
                   }
-                },
-                "required": [
-                  "id",
-                  "signInName"
+                ]
+              },
+              "approvedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "confirmedBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "confirmedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "first": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "externalForceFlags": {
+                        "type": "object",
+                        "properties": {
+                          "houseWashedAway": {
+                            "type": "boolean"
+                          },
+                          "groundScour": {
+                            "type": "boolean"
+                          },
+                          "foundationWashout": {
+                            "type": "boolean"
+                          },
+                          "fullCeilingInundation": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "foundationWashout",
+                          "fullCeilingInundation",
+                          "groundScour",
+                          "houseWashedAway"
+                        ]
+                      },
+                      "tiltRatio": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "inundationDepthCm": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "externalForceFlags",
+                      "floorApportionment",
+                      "inundationDepthCm",
+                      "tiltRatio"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "second": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "partDamages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "part": {
+                              "type": "string"
+                            },
+                            "damageRatio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "damageRatio",
+                            "part"
+                          ]
+                        }
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "floorApportionment",
+                      "partDamages"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               }
             },
             "required": [
-              "author",
+              "address",
+              "approvedAt",
+              "approvedBy",
+              "assessmentBasis",
+              "buildingName",
+              "confirmedAt",
+              "confirmedBy",
+              "createdBy",
               "createdTime",
-              "done",
-              "label"
+              "damageLevel",
+              "damageRatio",
+              "first",
+              "floors",
+              "houseNumber",
+              "latitude",
+              "longitude",
+              "officialChosenAt",
+              "officialChosenBy",
+              "officialSurveyId",
+              "parentSurveyId",
+              "second",
+              "status",
+              "structureType",
+              "submittedAt",
+              "surveyType"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "victimName": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "victimContact": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "victimAddress": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "victimAddress",
+              "victimContact",
+              "victimName"
             ]
           },
           {
             "type": "object",
             "properties": {
               "id": {
-                "$ref": "#/components/schemas/Dto<\"task\">"
+                "$ref": "#/components/schemas/Dto<\"survey\">"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        ]
+      },
+      "SurveyType": {
+        "enum": [
+          "first",
+          "second"
+        ],
+        "type": "string"
+      },
+      "Dto<\"survey\">": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "SurveyStatus": {
+        "enum": [
+          "approved",
+          "confirmed",
+          "draft",
+          "submitted"
+        ],
+        "type": "string"
+      },
+      "StructureType": {
+        "enum": [
+          "nonWood",
+          "wood"
+        ],
+        "type": "string"
+      },
+      "Json": {
+        "type": "object"
+      },
+      "ExportFormat": {
+        "enum": [
+          "csv",
+          "pdf"
+        ],
+        "type": "string"
+      },
+      "Dto<\"photo\">": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "PhotoDto": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "surveyId": {
+                "$ref": "#/components/schemas/Dto<\"survey\">"
               },
-              "image": {
-                "type": "object",
-                "properties": {
-                  "url": {
-                    "type": "string"
-                  },
-                  "s3Key": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "s3Key",
-                  "url"
+              "part": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "step": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "fileName": {
+                "type": "string"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "s3Key": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/PhotoStatus"
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              },
+              "createdAt": {
+                "type": "number"
+              },
+              "uploadedAt": {
+                "type": [
+                  "null",
+                  "number"
                 ]
               }
             },
             "required": [
-              "id",
-              "image"
+              "contentType",
+              "createdAt",
+              "createdBy",
+              "fileName",
+              "part",
+              "s3Key",
+              "status",
+              "step",
+              "surveyId",
+              "uploadedAt"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Dto<\"photo\">"
+              }
+            },
+            "required": [
+              "id"
             ]
           }
         ]
       },
-      "Dto<\"task\">": {
+      "PhotoStatus": {
+        "enum": [
+          "pending",
+          "uploaded"
+        ],
+        "type": "string"
+      },
+      "SurveyDto": {
         "allOf": [
           {
             "type": "object",
-            "properties": {}
+            "properties": {
+              "surveyType": {
+                "$ref": "#/components/schemas/SurveyType"
+              },
+              "parentSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "$ref": "#/components/schemas/SurveyStatus"
+              },
+              "address": {
+                "type": "string"
+              },
+              "houseNumber": {
+                "type": "string"
+              },
+              "structureType": {
+                "$ref": "#/components/schemas/StructureType"
+              },
+              "buildingName": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "floors": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "latitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "longitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageRatio": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageLevel": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "assessmentBasis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Json"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              },
+              "createdTime": {
+                "type": "number"
+              },
+              "submittedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "approvedBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "approvedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "confirmedBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "confirmedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "first": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "externalForceFlags": {
+                        "type": "object",
+                        "properties": {
+                          "houseWashedAway": {
+                            "type": "boolean"
+                          },
+                          "groundScour": {
+                            "type": "boolean"
+                          },
+                          "foundationWashout": {
+                            "type": "boolean"
+                          },
+                          "fullCeilingInundation": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "foundationWashout",
+                          "fullCeilingInundation",
+                          "groundScour",
+                          "houseWashedAway"
+                        ]
+                      },
+                      "tiltRatio": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "inundationDepthCm": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "externalForceFlags",
+                      "floorApportionment",
+                      "inundationDepthCm",
+                      "tiltRatio"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "second": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "partDamages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "part": {
+                              "type": "string"
+                            },
+                            "damageRatio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "damageRatio",
+                            "part"
+                          ]
+                        }
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "floorApportionment",
+                      "partDamages"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "address",
+              "approvedAt",
+              "approvedBy",
+              "assessmentBasis",
+              "buildingName",
+              "confirmedAt",
+              "confirmedBy",
+              "createdBy",
+              "createdTime",
+              "damageLevel",
+              "damageRatio",
+              "first",
+              "floors",
+              "houseNumber",
+              "latitude",
+              "longitude",
+              "officialChosenAt",
+              "officialChosenBy",
+              "officialSurveyId",
+              "parentSurveyId",
+              "second",
+              "status",
+              "structureType",
+              "submittedAt",
+              "surveyType"
+            ]
           },
           {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Dto<\"survey\">"
+              }
+            },
+            "required": [
+              "id"
+            ]
           }
         ]
       },
-      "{limit?:number|undefined;}": {
+      "{address?:string|undefined;status?:\"draft\"|\"submitted\"|\"approved\"|\"confirmed\"|undefined;surveyType?:\"second\"|\"first\"|undefined;structureType?:\"wood\"|\"nonWood\"|undefined;damageLevel?:\"totalCollapse\"|\"largeScaleHalf\"|\"mediumScaleHalf\"|\"half\"|\"quasiHalf\"|\"partial\"|undefined;createdBy?:Dto<\"user\">|undefined;confirmedOnly?:\"false\"|\"true\"|undefined;createdFrom?:number|undefined;createdTo?:number|undefined;}": {
         "type": "object",
         "properties": {
-          "limit": {
+          "address": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "approved",
+              "confirmed",
+              "draft",
+              "submitted"
+            ],
+            "type": "string"
+          },
+          "surveyType": {
+            "enum": [
+              "first",
+              "second"
+            ],
+            "type": "string"
+          },
+          "structureType": {
+            "enum": [
+              "nonWood",
+              "wood"
+            ],
+            "type": "string"
+          },
+          "damageLevel": {
+            "enum": [
+              "half",
+              "largeScaleHalf",
+              "mediumScaleHalf",
+              "partial",
+              "quasiHalf",
+              "totalCollapse"
+            ],
+            "type": "string"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/Dto<\"user\">"
+          },
+          "confirmedOnly": {
+            "enum": [
+              "false",
+              "true"
+            ],
+            "type": "string"
+          },
+          "createdFrom": {
+            "type": "number"
+          },
+          "createdTo": {
             "type": "number"
           }
         }
       },
-      "FormData": {
-        "type": "object"
-      },
-      "{label:string;}": {
+      "{address?:string|undefined;page?:number|undefined;status?:\"draft\"|\"submitted\"|\"approved\"|\"confirmed\"|undefined;surveyType?:\"second\"|\"first\"|undefined;structureType?:\"wood\"|\"nonWood\"|undefined;pageSize?:number|undefined;damageLevel?:\"totalCollapse\"|\"largeScaleHalf\"|\"mediumScaleHalf\"|\"half\"|\"quasiHalf\"|\"partial\"|undefined;createdBy?:Dto<\"user\">|undefined;confirmedOnly?:\"false\"|\"true\"|undefined;createdFrom?:number|undefined;createdTo?:number|undefined;}": {
         "type": "object",
         "properties": {
-          "label": {
+          "address": {
             "type": "string"
-          }
-        },
-        "required": [
-          "label"
-        ]
-      },
-      "{image?:File|undefined;}": {
-        "type": "object",
-        "properties": {
-          "image": {
-            "$ref": "#/components/schemas/File"
+          },
+          "page": {
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "approved",
+              "confirmed",
+              "draft",
+              "submitted"
+            ],
+            "type": "string"
+          },
+          "surveyType": {
+            "enum": [
+              "first",
+              "second"
+            ],
+            "type": "string"
+          },
+          "structureType": {
+            "enum": [
+              "nonWood",
+              "wood"
+            ],
+            "type": "string"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "damageLevel": {
+            "enum": [
+              "half",
+              "largeScaleHalf",
+              "mediumScaleHalf",
+              "partial",
+              "quasiHalf",
+              "totalCollapse"
+            ],
+            "type": "string"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/Dto<\"user\">"
+          },
+          "confirmedOnly": {
+            "enum": [
+              "false",
+              "true"
+            ],
+            "type": "string"
+          },
+          "createdFrom": {
+            "type": "number"
+          },
+          "createdTo": {
+            "type": "number"
           }
         }
       },
-      "File": {
-        "type": "object",
-        "properties": {
-          "lastModified": {
-            "type": "number"
-          },
-          "name": {
-            "type": "string"
-          },
-          "webkitRelativePath": {
-            "type": "string"
-          },
-          "size": {
-            "type": "number"
-          },
-          "type": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "lastModified",
-          "name",
-          "size",
-          "type",
-          "webkitRelativePath"
-        ]
-      },
-      "{done:boolean;taskId:Branded<\"maybe\">|Dto<\"task\">;}": {
-        "type": "object",
-        "properties": {
-          "done": {
-            "type": "boolean"
-          },
-          "taskId": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Branded<\"maybe\">"
-              },
-              {
-                "$ref": "#/components/schemas/Dto<\"task\">"
-              }
-            ]
-          }
-        },
-        "required": [
-          "done",
-          "taskId"
-        ]
-      },
-      "Branded<\"maybe\">": {
+      "SubmissionResultDto": {
         "allOf": [
           {
             "type": "object",
-            "properties": {}
+            "properties": {
+              "surveyType": {
+                "$ref": "#/components/schemas/SurveyType"
+              },
+              "parentSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "$ref": "#/components/schemas/SurveyStatus"
+              },
+              "address": {
+                "type": "string"
+              },
+              "houseNumber": {
+                "type": "string"
+              },
+              "structureType": {
+                "$ref": "#/components/schemas/StructureType"
+              },
+              "buildingName": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "floors": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "latitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "longitude": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageRatio": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "damageLevel": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "assessmentBasis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Json"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialSurveyId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"survey\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "officialChosenAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "createdBy": {
+                "$ref": "#/components/schemas/Dto<\"user\">"
+              },
+              "createdTime": {
+                "type": "number"
+              },
+              "submittedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "approvedBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "approvedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "confirmedBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Dto<\"user\">"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "confirmedAt": {
+                "type": [
+                  "null",
+                  "number"
+                ]
+              },
+              "first": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "externalForceFlags": {
+                        "type": "object",
+                        "properties": {
+                          "houseWashedAway": {
+                            "type": "boolean"
+                          },
+                          "groundScour": {
+                            "type": "boolean"
+                          },
+                          "foundationWashout": {
+                            "type": "boolean"
+                          },
+                          "fullCeilingInundation": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "foundationWashout",
+                          "fullCeilingInundation",
+                          "groundScour",
+                          "houseWashedAway"
+                        ]
+                      },
+                      "tiltRatio": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "inundationDepthCm": {
+                        "type": [
+                          "null",
+                          "number"
+                        ]
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "externalForceFlags",
+                      "floorApportionment",
+                      "inundationDepthCm",
+                      "tiltRatio"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "second": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "partDamages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "part": {
+                              "type": "string"
+                            },
+                            "damageRatio": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "damageRatio",
+                            "part"
+                          ]
+                        }
+                      },
+                      "floorApportionment": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "ratio": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "floor",
+                                "ratio"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "floorApportionment",
+                      "partDamages"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "address",
+              "approvedAt",
+              "approvedBy",
+              "assessmentBasis",
+              "buildingName",
+              "confirmedAt",
+              "confirmedBy",
+              "createdBy",
+              "createdTime",
+              "damageLevel",
+              "damageRatio",
+              "first",
+              "floors",
+              "houseNumber",
+              "latitude",
+              "longitude",
+              "officialChosenAt",
+              "officialChosenBy",
+              "officialSurveyId",
+              "parentSurveyId",
+              "second",
+              "status",
+              "structureType",
+              "submittedAt",
+              "surveyType"
+            ]
           },
           {
-            "type": "string"
-          }
-        ]
-      },
-      "{taskId:Branded<\"maybe\">|Dto<\"task\">;}": {
-        "type": "object",
-        "properties": {
-          "taskId": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Branded<\"maybe\">"
+            "type": "object",
+            "properties": {
+              "victimName": {
+                "type": [
+                  "null",
+                  "string"
+                ]
               },
-              {
-                "$ref": "#/components/schemas/Dto<\"task\">"
+              "victimContact": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "victimAddress": {
+                "type": [
+                  "null",
+                  "string"
+                ]
               }
+            },
+            "required": [
+              "victimAddress",
+              "victimContact",
+              "victimName"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Dto<\"survey\">"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "photoUploadTickets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "photoId": {
+                      "$ref": "#/components/schemas/Dto<\"photo\">"
+                    },
+                    "putUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "photoId",
+                    "putUrl"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "photoUploadTickets"
             ]
           }
-        },
-        "required": [
-          "taskId"
         ]
       }
     }
